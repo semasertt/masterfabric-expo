@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Ritual",
+    "slug": "ritual",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./src/assets/images/app-icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "scheme": "ritual",
+    "splash": {
+      "image": "./src/assets/images/splash-screen.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ritual.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.ritual.app",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./src/assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "supabaseUrl": "https://yputaaxtovjntnesvhvn.supabase.co",
+      "supabaseAnonKey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlwdXRhYXh0b3ZqbnRuZXN2aHZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkyNjUwMTMsImV4cCI6MjA4NDg0MTAxM30.WBBdiOFRkSyZ-jpa-8rrq0XhlMGUpe6OYw8QmmUiqFY"
+    }
+  }
+}
