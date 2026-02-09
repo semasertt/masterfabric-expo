@@ -17,11 +17,19 @@ supabase/
 │   ├── 023_create_game_world_states_table.sql
 │   ├── 024_create_daily_rewards_table.sql
 │   ├── 025_create_user_settings_table.sql
-│   └── 026_create_habitquest_functions.sql
+│   ├── 026_create_habitquest_functions.sql
+│   ├── 028_add_habits_time_range.sql      # start_time, end_time, duration_minutes
+│   ├── 029_add_habits_is_pinned.sql
+│   ├── 030_add_habit_type_and_quantitative.sql
+│   ├── 031_add_habits_reminder.sql
+│   ├── 032_habits_allow_soft_delete_rls.sql
+│   └── 033_soft_delete_habit_function.sql
 └── seed/                # Seed data dosyaları
     ├── habit_categories_seed.sql
     └── item_catalog_seed.sql
 ```
+
+**Not:** 027 numaralı migration yok; `duration_minutes` 028 içinde eklenir.
 
 ## 🚀 Kurulum
 
@@ -40,7 +48,7 @@ supabase migration up
 
 **Supabase Dashboard ile:**
 1. Supabase Dashboard → SQL Editor'e gidin
-2. Migration dosyalarını sırayla çalıştırın (016'dan 026'ya kadar)
+2. Migration dosyalarını sırayla çalıştırın (016 → 026, sonra 028 → 033)
 
 ### 2. Seed Data'yı Yükleme
 
@@ -108,6 +116,14 @@ Bir kullanıcının belirli bir tarihteki günlük ilerlemesini döndürür.
 SELECT get_daily_progress('user-uuid-here', '2026-01-24');
 ```
 
+### `soft_delete_habit(habit_id UUID)`
+Alışkanlığı soft-delete eder (`deleted_at` set eder). Sadece sahibi silebilir; RLS uyumlu.
+
+**Kullanım:**
+```sql
+SELECT soft_delete_habit('habit-uuid-here');
+```
+
 ## 🔐 Row Level Security (RLS)
 
 Tüm tablolarda RLS aktif. Kullanıcılar sadece kendi verilerini görebilir/düzenleyebilir.
@@ -121,19 +137,15 @@ Tüm tablolarda RLS aktif. Kullanıcılar sadece kendi verilerini görebilir/dü
 
 ## 📝 Migration Sırası
 
-Migration'ları şu sırayla çalıştırın:
+Migration'ları **bu sırayla** çalıştırın (027 atlandı):
 
-1. `016_create_habit_categories_table.sql`
-2. `017_create_user_profiles_table.sql`
-3. `018_create_habits_table.sql`
-4. `019_create_habit_completions_table.sql`
-5. `020_create_item_catalog_table.sql`
-6. `021_create_user_items_table.sql`
-7. `022_create_game_world_items_table.sql`
-8. `023_create_game_world_states_table.sql`
-9. `024_create_daily_rewards_table.sql`
-10. `025_create_user_settings_table.sql`
-11. `026_create_habitquest_functions.sql`
+1. 016 → 017 → 018 → 019 → 020 → 021 → 022 → 023 → 024 → 025 → 026  
+2. 028 `add_habits_time_range` (timeline: start_time, end_time, duration_minutes)  
+3. 029 `add_habits_is_pinned`  
+4. 030 `add_habit_type_and_quantitative` (binary/quantitative + habit_completions.value)  
+5. 031 `add_habits_reminder`  
+6. 032 `habits_allow_soft_delete_rls` (soft delete için RLS düzeltmesi)  
+7. 033 `soft_delete_habit_function` (uygulama tarafında silme için)
 
 Sonra seed dosyalarını çalıştırın:
 - `seed/habit_categories_seed.sql`

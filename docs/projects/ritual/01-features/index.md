@@ -89,6 +89,10 @@
 
 ## 📝 Feature Specifications
 
+### Habit extensions (timeline, time range, quantitative)
+- [Günlük timeline ve süre aralığı](./daily-timeline-and-time-range.md) – start_time/end_time, DailyTimeline bileşeni, takvim ilişkisi
+
+### Ekran spesifikasyonları
 See individual screen documentation:
 - [Splash Screen](./views/00-splash-view.md)
 - [Onboarding](./views/01-onboarding-view.md)

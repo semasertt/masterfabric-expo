@@ -66,14 +66,25 @@
 - `icon` (text, nullable) - Custom icon (optional)
 - `created_at` (timestamp)
 - `updated_at` (timestamp)
-- `deleted_at` (timestamp, nullable) - Soft delete
+- `deleted_at` (timestamp, nullable) - Soft delete (use `soft_delete_habit(habit_id)` for RLS-safe delete)
+- `start_time` (varchar(5), nullable) - Planned start HH:mm; NULL = unscheduled (timeline)
+- `end_time` (varchar(5), nullable) - Planned end HH:mm (timeline)
+- `duration_minutes` (integer, nullable) - Target duration in minutes
+- `is_pinned` (boolean, default: false) - Pinned to top in list
+- `habit_type` (text, default: 'binary') - 'binary' | 'quantitative'
+- `unit` (text, nullable) - e.g. min, cups, pages (quantitative only)
+- `daily_target` (numeric, nullable) - Target value per day (quantitative only)
+- `note` (text, nullable) - Optional note
+- `reminder_enabled` (boolean, default: false) - Daily reminder on/off
+- `reminder_time` (text, nullable) - Reminder time HH:mm (24h)
 
-**RLS:** User can only view/edit their own habits
+**RLS:** User can only view/edit their own habits. UPDATE policy allows soft delete (WITH CHECK (true)); use `soft_delete_habit()` for app-side delete.
 
 **Indexes:**
 - `idx_habits_user_id` (user_id)
-- `idx_habits_user_active` (user_id, is_active)
+- `idx_habits_user_active` (user_id, is_active) WHERE deleted_at IS NULL
 - `idx_habits_category` (category_id)
+- `idx_habits_is_pinned` (user_id, is_pinned) WHERE deleted_at IS NULL
 
 ---
 
@@ -87,6 +98,7 @@
 - `completion_date` (date, NOT NULL) - Format: YYYY-MM-DD
 - `completed_at` (timestamp) - Exact completion time
 - `notes` (text, nullable) - User notes
+- `value` (numeric, nullable) - Logged value for quantitative habits; NULL for binary
 - `created_at` (timestamp)
 
 **Unique Constraint:** `(habit_id, completion_date)` - Can complete once per day
@@ -314,16 +326,18 @@ item_catalog (global, not user-specific)
 
 ## 📝 Migration Order
 
-1. `habit_categories` (lookup table, seed data first)
-2. `user_profiles` (user extension)
-3. `habits` (habits depend on categories)
-4. `habit_completions` (completions depend on habits)
-5. `item_catalog` (lookup table, seed data first)
-6. `user_items` (user items depend on catalog)
-7. `game_world_items` (placed items depend on user_items)
-8. `game_world_states` (world states)
-9. `daily_rewards` (rewards)
-10. `user_settings` (settings)
+**Core (016–026):**  
+1. 016 habit_categories → 2. 017 user_profiles → 3. 018 habits → 4. 019 habit_completions → 5. 020 item_catalog → 6. 021 user_items → 7. 022 game_world_items → 8. 023 game_world_states → 9. 024 daily_rewards → 10. 025 user_settings → 11. 026 habitquest_functions  
+
+**Habit extensions (028–033):**  
+12. 028 add_habits_time_range (start_time, end_time, duration_minutes)  
+13. 029 add_habits_is_pinned  
+14. 030 add_habit_type_and_quantitative (habit_type, unit, daily_target, note; habit_completions.value)  
+15. 031 add_habits_reminder  
+16. 032 habits_allow_soft_delete_rls (RLS fix for soft delete)  
+17. 033 soft_delete_habit_function  
+
+*(027 atlandı; duration_minutes 028 içinde.)*
 
 ---
 
@@ -343,6 +357,9 @@ item_catalog (global, not user-specific)
 
 ### **unlock_new_area(user_id)**
 - Unlocks new area (e.g., second floor when house is full)
+
+### **soft_delete_habit(habit_id UUID)**
+- Soft-deletes habit (sets `deleted_at`). SECURITY DEFINER; only owner can delete. Use from app instead of direct UPDATE to avoid RLS issues.
 
 ---
 

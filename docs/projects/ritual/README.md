@@ -18,7 +18,8 @@ A minimalist habit tracking application with gamification elements. Users track 
 ## 📚 Documentation
 
 ### Getting Started
-- [Implementation Analysis](./00-implementation-analysis.md) - Complete project analysis
+- [System Overview](./SYSTEM-OVERVIEW.md) - Sistem mantığı, mimari ve migration özeti
+- [Implementation Analysis](./00-implementation-analysis.md) - Proje yapısı ve referanslar
 - [Development Phases](./03-development-phases.md) - Phase-by-phase development plan
 
 ### Features
@@ -33,8 +34,8 @@ A minimalist habit tracking application with gamification elements. Users track 
 - [Tech Stack](./03-tech-stack/index.md)
 
 ### Backend
-- [Database Schema](./supabase/migrations/)
-- [Supabase Setup](./supabase/README.md)
+- [Database Schema](./database-schema.md) – Tablolar ve migration sırası (016–033)
+- [Supabase Setup](./supabase/README.md) – Migration ve seed kurulumu
 
 ---
 
