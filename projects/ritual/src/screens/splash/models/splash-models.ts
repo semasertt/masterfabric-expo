@@ -2,12 +2,6 @@
  * Splash Screen Models and Types
  */
 
-// SplashScreen doesn't need props for now
-// If props are needed in the future, add them here
-// export interface SplashScreenProps {
-//   // Add props here when needed
-// }
-
 export interface SplashNavigationState {
   isChecking: boolean;
   isReady: boolean;
@@ -28,4 +22,11 @@ export type SplashNavigationTarget =
 export interface SplashScreenState {
   navigation: SplashNavigationState;
   timing: SplashTimingState;
+}
+
+export interface SplashStoreState {
+  state: SplashScreenState;
+  setNavigationState: (state: Partial<SplashNavigationState>) => void;
+  setTimingState: (state: Partial<SplashTimingState>) => void;
+  reset: () => void;
 }
