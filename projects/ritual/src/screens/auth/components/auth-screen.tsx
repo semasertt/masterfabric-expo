@@ -10,18 +10,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+
 import { ICONS } from '../../../assets';
 import { navigationConfig } from '../../../navigation';
 import { RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
-import {
-  AUTH_TABS,
-  EMAIL_MAX_LENGTH,
-  ICON_SIZES,
-  KEYBOARD_AVOIDING_BEHAVIOR,
-  PASSWORD_MAX_LENGTH,
-  FULL_NAME_MAX_LENGTH,
-} from '../constants';
 import { useAuthViewModel } from '../hooks/use-auth-view-model';
 import { createStyles } from '../styles/auth-screen.styles';
 
@@ -55,10 +48,7 @@ export const AuthScreen: React.FC = () => {
     isConfirmPasswordValid,
   } = useAuthViewModel();
 
-  const keyboardBehavior =
-    Platform.OS === 'ios'
-      ? KEYBOARD_AVOIDING_BEHAVIOR.ios
-      : KEYBOARD_AVOIDING_BEHAVIOR.android;
+  const keyboardBehavior = Platform.OS === 'ios' ? 'padding' : 'height';
 
   const onSignIn = async () => {
     const success = await handleSignIn();
@@ -84,30 +74,30 @@ export const AuthScreen: React.FC = () => {
 
         <View style={styles.tabContainer}>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === AUTH_TABS.SIGN_IN && styles.tabButtonActive]}
-            onPress={() => handleTabChange(AUTH_TABS.SIGN_IN)}
+            style={[styles.tabButton, activeTab === 'signin' && styles.tabButtonActive]}
+            onPress={() => handleTabChange('signin')}
             accessibilityLabel={t('auth.signIn')}
             accessibilityRole="tab"
           >
             <Text
               style={[
                 styles.tabButtonText,
-                activeTab === AUTH_TABS.SIGN_IN && styles.tabButtonTextActive,
+                activeTab === 'signin' && styles.tabButtonTextActive,
               ]}
             >
               {t('auth.signIn')}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.tabButton, activeTab === AUTH_TABS.SIGN_UP && styles.tabButtonActive]}
-            onPress={() => handleTabChange(AUTH_TABS.SIGN_UP)}
+            style={[styles.tabButton, activeTab === 'signup' && styles.tabButtonActive]}
+            onPress={() => handleTabChange('signup')}
             accessibilityLabel={t('auth.signUp')}
             accessibilityRole="tab"
           >
             <Text
               style={[
                 styles.tabButtonText,
-                activeTab === AUTH_TABS.SIGN_UP && styles.tabButtonTextActive,
+                activeTab === 'signup' && styles.tabButtonTextActive,
               ]}
             >
               {t('auth.signUp')}
@@ -115,7 +105,7 @@ export const AuthScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
 
-        {activeTab === AUTH_TABS.SIGN_IN && (
+        {activeTab === 'signin' && (
           <View style={styles.formContainer}>
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>{t('auth.emailAddress')}</Text>
@@ -126,7 +116,7 @@ export const AuthScreen: React.FC = () => {
                 ]}
                 value={signInEmail.value}
                 onChangeText={(text) => {
-                  if (text.length <= EMAIL_MAX_LENGTH) {
+                  if (text.length <= 254) {
                     signInEmail.setValue(text);
                     handleFieldTouch('signInEmail');
                   }
@@ -137,7 +127,7 @@ export const AuthScreen: React.FC = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
-                maxLength={EMAIL_MAX_LENGTH}
+                maxLength={254}
               />
               {touched.signInEmail && !signInEmail.isValid && signInEmail.error && (
                 <Text style={styles.errorText}>{signInEmail.error}</Text>
@@ -155,7 +145,7 @@ export const AuthScreen: React.FC = () => {
                   value={showPassword.signIn ? signInPassword.value : displayValues.signIn}
                   onChangeText={(text) => {
                     if (showPassword.signIn) {
-                      if (text.length <= PASSWORD_MAX_LENGTH) {
+                      if (text.length <= 128) {
                         signInPassword.setValue(text);
                         handleFieldTouch('signInPassword');
                       }
@@ -168,7 +158,7 @@ export const AuthScreen: React.FC = () => {
                   placeholderTextColor={RITUAL_COLORS.text.tertiary}
                   secureTextEntry={!showPassword.signIn}
                   autoComplete="password"
-                  maxLength={PASSWORD_MAX_LENGTH}
+                  maxLength={128}
                 />
                 <TouchableOpacity
                   style={styles.passwordToggle}
@@ -178,7 +168,7 @@ export const AuthScreen: React.FC = () => {
                 >
                   <Ionicons
                     name={showPassword.signIn ? ICONS.eyeOff : ICONS.eye}
-                    size={ICON_SIZES.medium}
+                    size={20}
                     color={RITUAL_COLORS.text.secondary}
                   />
                 </TouchableOpacity>
@@ -188,7 +178,7 @@ export const AuthScreen: React.FC = () => {
               )}
             </View>
 
-            {apiError && activeTab === AUTH_TABS.SIGN_IN && (
+            {apiError && activeTab === 'signin' && (
               <View style={styles.apiErrorContainer}>
                 <Text style={styles.apiErrorText}>{apiError}</Text>
               </View>
@@ -211,7 +201,7 @@ export const AuthScreen: React.FC = () => {
           </View>
         )}
 
-        {activeTab === AUTH_TABS.SIGN_UP && (
+        {activeTab === 'signup' && (
           <View style={styles.formContainer}>
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>{t('auth.fullName')}</Text>
@@ -222,7 +212,7 @@ export const AuthScreen: React.FC = () => {
                 ]}
                 value={signUpFullName.value}
                 onChangeText={(text) => {
-                  if (text.length <= FULL_NAME_MAX_LENGTH) {
+                    if (text.length <= 100) {
                     signUpFullName.setValue(text);
                     handleFieldTouch('signUpFullName');
                   }
@@ -231,7 +221,7 @@ export const AuthScreen: React.FC = () => {
                 placeholder={t('auth.fullNamePlaceholder')}
                 placeholderTextColor={RITUAL_COLORS.text.tertiary}
                 autoCapitalize="words"
-                maxLength={FULL_NAME_MAX_LENGTH}
+                maxLength={100}
               />
               {touched.signUpFullName && !signUpFullName.isValid && signUpFullName.error && (
                 <Text style={styles.errorText}>{signUpFullName.error}</Text>
@@ -247,7 +237,7 @@ export const AuthScreen: React.FC = () => {
                 ]}
                 value={signUpEmail.value}
                 onChangeText={(text) => {
-                  if (text.length <= EMAIL_MAX_LENGTH) {
+                  if (text.length <= 254) {
                     signUpEmail.setValue(text);
                     handleFieldTouch('signUpEmail');
                   }
@@ -258,7 +248,7 @@ export const AuthScreen: React.FC = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
-                maxLength={EMAIL_MAX_LENGTH}
+                maxLength={254}
               />
               {touched.signUpEmail && !signUpEmail.isValid && signUpEmail.error && (
                 <Text style={styles.errorText}>{signUpEmail.error}</Text>
@@ -276,7 +266,7 @@ export const AuthScreen: React.FC = () => {
                   value={showPassword.signUp ? signUpPassword.value : displayValues.signUp}
                   onChangeText={(text) => {
                     if (showPassword.signUp) {
-                      if (text.length <= PASSWORD_MAX_LENGTH) {
+                      if (text.length <= 128) {
                         signUpPassword.setValue(text);
                         handleFieldTouch('signUpPassword');
                       }
@@ -289,7 +279,7 @@ export const AuthScreen: React.FC = () => {
                   placeholderTextColor={RITUAL_COLORS.text.tertiary}
                   secureTextEntry={!showPassword.signUp}
                   autoComplete="password-new"
-                  maxLength={PASSWORD_MAX_LENGTH}
+                  maxLength={128}
                 />
                 <TouchableOpacity
                   style={styles.passwordToggle}
@@ -299,7 +289,7 @@ export const AuthScreen: React.FC = () => {
                 >
                   <Ionicons
                     name={showPassword.signUp ? ICONS.eyeOff : ICONS.eye}
-                    size={ICON_SIZES.medium}
+                    size={20}
                     color={RITUAL_COLORS.text.secondary}
                   />
                 </TouchableOpacity>
@@ -326,7 +316,7 @@ export const AuthScreen: React.FC = () => {
                   }
                   onChangeText={(text) => {
                     if (showPassword.signUpConfirm) {
-                      if (text.length <= PASSWORD_MAX_LENGTH) {
+                      if (text.length <= 128) {
                         signUpConfirmPassword.setValue(text);
                         handleFieldTouch('signUpConfirmPassword');
                       }
@@ -344,7 +334,7 @@ export const AuthScreen: React.FC = () => {
                   placeholderTextColor={RITUAL_COLORS.text.tertiary}
                   secureTextEntry={!showPassword.signUpConfirm}
                   autoComplete="password-new"
-                  maxLength={PASSWORD_MAX_LENGTH}
+                  maxLength={128}
                 />
                 <TouchableOpacity
                   style={styles.passwordToggle}
@@ -356,7 +346,7 @@ export const AuthScreen: React.FC = () => {
                 >
                   <Ionicons
                     name={showPassword.signUpConfirm ? ICONS.eyeOff : ICONS.eye}
-                    size={ICON_SIZES.medium}
+                    size={20}
                     color={RITUAL_COLORS.text.secondary}
                   />
                 </TouchableOpacity>
@@ -372,7 +362,7 @@ export const AuthScreen: React.FC = () => {
                 )}
             </View>
 
-            {apiError && activeTab === AUTH_TABS.SIGN_UP && (
+            {apiError && activeTab === 'signup' && (
               <View style={styles.apiErrorContainer}>
                 <Text style={styles.apiErrorText}>{apiError}</Text>
               </View>

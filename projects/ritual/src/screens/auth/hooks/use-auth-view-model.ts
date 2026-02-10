@@ -1,25 +1,20 @@
 /**
  * Auth View Model Hook
- * Business logic for authentication screen
- * Based on validator-helper structure
  */
 
-import { useState, useCallback, useEffect, useRef } from 'react';
-import { useValidator } from '../../../shared/hooks/use-validator';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ValidatorType } from 'masterfabric-expo-core';
-import { signIn, signUp, getUserProfile } from '../../../shared/services/auth-service';
+
+import { useValidator } from '../../../shared/hooks/use-validator';
 import { t } from '../../../shared/i18n';
-import {
-  PASSWORD_MAX_LENGTH,
-  EMAIL_MAX_LENGTH,
-  PASSWORD_MASK_CHAR,
-  PASSWORD_DISPLAY_DELAY,
-  AUTH_TABS,
-} from '../constants';
+import { getUserProfile, signIn, signUp } from '../../../shared/services/auth-service';
 import type { AuthFormTouchedState, AuthTab } from '../models/auth-models';
 
+const PASSWORD_MASK_CHAR = '•';
+const PASSWORD_DISPLAY_DELAY = 600;
+
 export const useAuthViewModel = () => {
-  const [activeTab, setActiveTab] = useState<AuthTab>(AUTH_TABS.SIGN_IN);
+  const [activeTab, setActiveTab] = useState<AuthTab>('signin');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
   
@@ -128,7 +123,7 @@ export const useAuthViewModel = () => {
       newPasswordValue = currentValue;
     }
 
-    if (newPasswordValue.length > PASSWORD_MAX_LENGTH) {
+    if (newPasswordValue.length > 128) {
       return;
     }
 

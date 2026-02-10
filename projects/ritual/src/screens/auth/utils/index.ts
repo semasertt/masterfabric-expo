@@ -3,8 +3,9 @@
  */
 
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { type PasswordRequirement } from '../models/auth-models';
 import { t } from '../../../shared/i18n';
+
+import type { PasswordRequirement } from '../models/auth-models';
 
 /**
  * Get password requirements configuration

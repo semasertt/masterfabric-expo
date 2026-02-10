@@ -1,28 +1,10 @@
 /**
  * Auth Screen Store (Zustand)
- * Global authentication state management
  */
 
 import { create } from 'zustand';
-import type { Session } from '@supabase/supabase-js';
-import type { UserProfile } from '../../../shared/services/auth-service';
 
-export interface AuthStoreState {
-  session: Session | null;
-  userProfile: UserProfile | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  error: Error | null;
-}
-
-interface AuthStore extends AuthStoreState {
-  setSession: (session: Session | null) => void;
-  setUserProfile: (profile: UserProfile | null) => void;
-  setIsAuthenticated: (isAuthenticated: boolean) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: Error | null) => void;
-  clearAuth: () => void;
-}
+import type { AuthStoreFullState, AuthStoreState } from '../models/auth-models';
 
 const initialState: AuthStoreState = {
   session: null,
@@ -32,7 +14,7 @@ const initialState: AuthStoreState = {
   error: null,
 };
 
-export const useAuthStore = create<AuthStore>((set) => ({
+export const useAuthStore = create<AuthStoreFullState>((set) => ({
   ...initialState,
 
   setSession: (session) => {
