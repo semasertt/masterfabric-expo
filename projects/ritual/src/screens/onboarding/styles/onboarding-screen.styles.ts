@@ -1,9 +1,8 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { ONBOARDING_LAYOUT } from '../constants';
 
 export const createStyles = () => {
-  const L = ONBOARDING_LAYOUT;
   return StyleSheet.create({
     container: {
       flex: 1,
@@ -13,22 +12,22 @@ export const createStyles = () => {
       flexDirection: 'row',
       alignItems: 'center',
       justifyContent: 'flex-end',
-      paddingHorizontal: L.headerPaddingHorizontal,
-      paddingTop: L.headerPaddingTop,
-      paddingBottom: L.headerPaddingBottom,
+      paddingHorizontal: 24,
+      paddingTop: 60,
+      paddingBottom: 16,
     },
     backButton: {
-      width: L.backButtonSize,
-      height: L.backButtonSize,
+      width: 40,
+      height: 40,
       alignItems: 'center',
       justifyContent: 'center',
     },
     skipButton: {
-      paddingVertical: L.skipButtonPaddingVertical,
-      paddingHorizontal: L.skipButtonPaddingHorizontal,
+      paddingVertical: 8,
+      paddingHorizontal: 16,
     },
     skipText: {
-      fontSize: L.skipTextFontSize,
+      fontSize: 16,
       fontWeight: '500',
       color: RITUAL_COLORS.text.secondary,
       opacity: 0.8,
@@ -37,7 +36,7 @@ export const createStyles = () => {
       flex: 1,
       justifyContent: 'center',
       alignItems: 'center',
-      paddingHorizontal: L.contentPaddingHorizontal,
+      paddingHorizontal: 32,
     },
   });
 };

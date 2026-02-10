@@ -1,9 +1,8 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { STEP_CONTENT_LAYOUT } from '../constants';
 
 export const createStyles = () => {
-  const L = STEP_CONTENT_LAYOUT;
   return StyleSheet.create({
     container: {
       alignItems: 'center',
@@ -15,12 +14,12 @@ export const createStyles = () => {
       width: '100%',
       alignItems: 'center',
       justifyContent: 'flex-start',
-      marginBottom: L.graphicMarginBottom,
-      paddingTop: L.graphicPaddingTop,
-      marginTop: L.graphicMarginTop,
+      marginBottom: 32,
+      paddingTop: 0,
+      marginTop: -24,
     },
     graphic: {
-      width: L.graphicWidth,
+      width: 320,
       alignItems: 'center',
       justifyContent: 'flex-start',
     },
@@ -29,24 +28,24 @@ export const createStyles = () => {
       justifyContent: 'center',
     },
     logoImage: {
-      width: L.logoSize,
-      height: L.logoSize,
-      marginBottom: L.logoMarginBottom,
+      width: 320,
+      height: 320,
+      marginBottom: -75,
       tintColor: RITUAL_COLORS.text.primary,
     },
     appName: {
-      fontSize: L.appNameFontSize,
+      fontSize: 48,
       fontWeight: '300',
-      letterSpacing: L.appNameLetterSpacing,
+      letterSpacing: 2,
       color: RITUAL_COLORS.text.primary,
-      marginBottom: L.appNameMarginBottom,
+      marginBottom: 4,
     },
     tagline: {
-      fontSize: L.taglineFontSize,
+      fontSize: 16,
       fontWeight: '300',
-      letterSpacing: L.taglineLetterSpacing,
+      letterSpacing: 1,
       color: RITUAL_COLORS.text.secondary,
-      opacity: L.taglineOpacity,
+      opacity: 0.8,
     },
     iconTextContainer: {
       alignItems: 'center',
@@ -54,40 +53,40 @@ export const createStyles = () => {
       width: '100%',
     },
     iconWrapper: {
-      width: L.graphicWidth,
-      height: L.graphicHeight,
+      width: 320,
+      height: 320,
       alignItems: 'center',
       justifyContent: 'flex-start',
-      marginTop: L.iconWrapperMarginTop,
-      marginBottom: L.iconWrapperMarginBottom,
+      marginTop: 44,
+      marginBottom: 2,
     },
     iconContainer: {
-      width: L.iconCircleSize,
-      height: L.iconCircleSize,
-      borderRadius: L.iconCircleBorderRadius,
+      width: 200,
+      height: 200,
+      borderRadius: 100,
       alignItems: 'center',
       justifyContent: 'center',
       position: 'relative',
     },
     icon: {
-      fontSize: L.iconEmojiFontSize,
+      fontSize: 120,
     },
     title: {
-      fontSize: L.titleFontSize,
+      fontSize: 32,
       fontWeight: 'bold',
       textAlign: 'center',
-      marginTop: L.titleMarginTop,
-      marginBottom: L.titleMarginBottom,
-      letterSpacing: L.titleLetterSpacing,
+      marginTop: -60,
+      marginBottom: 8,
+      letterSpacing: 0.5,
       color: RITUAL_COLORS.text.primary,
-      paddingHorizontal: L.titlePaddingHorizontal,
+      paddingHorizontal: 20,
     },
     description: {
-      fontSize: L.descriptionFontSize,
+      fontSize: 17,
       textAlign: 'center',
-      lineHeight: L.descriptionLineHeight,
-      paddingHorizontal: L.descriptionPaddingHorizontal,
-      opacity: L.descriptionOpacity,
+      lineHeight: 26,
+      paddingHorizontal: 20,
+      opacity: 0.8,
       color: RITUAL_COLORS.text.secondary,
     },
   });

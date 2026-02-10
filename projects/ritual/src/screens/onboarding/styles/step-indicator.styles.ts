@@ -1,32 +1,31 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { STEP_INDICATOR_LAYOUT } from '../constants';
 
 export const createStyles = () => {
-  const L = STEP_INDICATOR_LAYOUT;
   return StyleSheet.create({
     container: {
       flexDirection: 'row',
       justifyContent: 'center',
       alignItems: 'center',
-      paddingVertical: L.containerPaddingVertical,
-      paddingHorizontal: L.containerPaddingHorizontal,
-      marginTop: L.containerMarginTop,
+      paddingVertical: 24,
+      paddingHorizontal: 24,
+      marginTop: 16,
     },
     dot: {
-      width: L.dotSize,
-      height: L.dotSize,
-      borderRadius: L.dotBorderRadius,
-      marginHorizontal: L.dotMarginHorizontal,
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginHorizontal: 4,
       backgroundColor: RITUAL_COLORS.text.secondary,
-      opacity: L.dotOpacity,
+      opacity: 0.4,
     },
     activeDot: {
-      width: L.activeDotWidth,
-      height: L.activeDotHeight,
-      borderRadius: L.dotBorderRadius,
+      width: 32,
+      height: 8,
+      borderRadius: 4,
       backgroundColor: RITUAL_COLORS.accent.primary,
-      opacity: L.activeDotOpacity,
+      opacity: 1,
     },
   });
 };
