@@ -1,12 +1,14 @@
-import { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import { View } from 'react-native';
 import { ThemeProvider } from 'masterfabric-expo-core';
-import { createRootLayoutStyles } from '../src/shared/layouts';
+import { useEffect } from 'react';
+import { View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SnackbarQueue } from '../src/shared/components';
 import { RITUAL_COLORS } from '../src/shared/constants';
-import { SnackbarQueue } from '../src/shared/components/SnackbarQueue';
-import { checkSupabaseAvailability } from '../src/shared/services/supabase-service';
+import { LocaleProvider } from '../src/shared/i18n';
+import { createRootLayoutStyles } from '../src/shared/layouts';
 import '../src/shared/services/snackbar-bridge';
+import { checkSupabaseAvailability } from '../src/shared/services/supabase-service';
 
 const styles = createRootLayoutStyles();
 
@@ -24,24 +26,28 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ThemeProvider defaultTheme="system" enablePersistence={true}>
-      <View style={styles.container}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: {
-              backgroundColor: RITUAL_COLORS.background.primary,
-            },
-          }}
-        >
-          <Stack.Screen name="index" />
-          <Stack.Screen name="splash" />
-          <Stack.Screen name="onboarding" />
-          <Stack.Screen name="auth" />
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <SnackbarQueue />
-      </View>
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.container}>
+      <ThemeProvider defaultTheme="system" enablePersistence={true}>
+        <LocaleProvider>
+        <View style={styles.container}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: {
+                backgroundColor: RITUAL_COLORS.background.primary,
+              },
+            }}
+          >
+            <Stack.Screen name="index" />
+            <Stack.Screen name="splash" />
+            <Stack.Screen name="onboarding" />
+            <Stack.Screen name="auth" />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          </Stack>
+          <SnackbarQueue />
+        </View>
+        </LocaleProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
