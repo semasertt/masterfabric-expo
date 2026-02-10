@@ -1,9 +1,9 @@
 /**
  * Onboarding View Model Hook
- * Business logic for onboarding screen
  */
 
 import { useRouter } from 'expo-router';
+
 import { navigationConfig } from '../../../navigation';
 import { useOnboardingStore } from '../store/onboarding-store';
 import { isOnboardingCompleted } from '../utils';
