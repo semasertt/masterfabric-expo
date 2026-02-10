@@ -4,14 +4,14 @@
  */
 
 export const RITUAL_COLORS = {
-  // Primary Background (Koyu lacivert)
+  // Primary Background (dark navy)
   background: {
     primary: '#0B1123',
-    secondary: '#0F1628', // Kartlar, input alanları için (ana arka plana çok yakın)
-    card: '#0F1628', // Kart arka planları
-    input: '#1E2A47', // Input alanları için (lacivertin koyu soluk tonu)
+    secondary: '#0F1628', // Cards, input areas (very close to main background)
+    card: '#0F1628', // Card backgrounds
+    input: '#1E2A47', // Input fields (muted dark navy tone)
   },
-    // Overlay
+  // Overlay
   overlay: {
     backdrop: 'rgba(0, 0, 0, 0.7)',
   },
@@ -26,20 +26,20 @@ export const RITUAL_COLORS = {
 
   // Accent Colors
   accent: {
-    primary: '#4C82FB', // Açık mavi (butonlar, seçili öğeler, linkler)
+    primary: '#4C82FB', // Light blue (buttons, selected items, links)
     secondary: '#3B82F6',
     hover: '#2563EB',
   },
 
   // Border Colors
   border: {
-    primary: '#1A243D', // Secondary background ile aynı
-    input: '#2A3447', // Input border için (lacivertin koyu soluk tonu)
-    card: '#2A3447', // Kart border'ları için daha belirgin
-    divider: '#1E2A47', // Açık renkli divider çizgisi
+    primary: '#1A243D', // Same as secondary background
+    input: '#2A3447', // Input border (muted dark navy tone)
+    card: '#2A3447', // Card borders (more visible)
+    divider: '#1E2A47', // Light divider line
   },
 
-  // Build Points badge (resimdeki pill: koyu gri arka plan + border)
+  // Build Points badge (pill: dark gray background + border)
   buildPointsBadge: {
     background: '#2C3138',
     border: '#3A414A',

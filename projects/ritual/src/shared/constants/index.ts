@@ -1,7 +1,8 @@
 /**
  * Shared Constants
- * Central export point for all constants
+ * Central export point. Colors from Colors.ts; layout/sizes from Sizes.ts.
  */
 
-export * from './colors';
-export * from './strings';
+export { DAYS_OF_WEEK, MONTH_KEYS, YEAR_MIN, YEAR_MAX } from './calendar';
+export { RITUAL_COLORS, type RitualColors } from './Colors';
+
