@@ -9,16 +9,16 @@ export { useOnboardingViewModel } from './hooks/use-onboarding-view-model';
 
 // Models
 export type {
-  OnboardingStep,
   OnboardingState,
+  OnboardingStep,
   OnboardingStoreState,
+  StepContentProps,
+  StepControlsProps,
+  StepIndicatorProps,
 } from './models/onboarding-models';
 
 // Store
 export { useOnboardingStore } from './store/onboarding-store';
-
-// Constants
-export { TOTAL_STEPS, ONBOARDING_COMPLETED_KEY } from './constants';
 
 // Utils
 export { isOnboardingCompleted, resetOnboarding } from './utils';
