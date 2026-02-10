@@ -11,13 +11,25 @@ export { SupabaseDebug } from './components/supabase-debug';
 export { useHomeViewModel } from './hooks/use-home-view-model';
 
 // Models
-export type { Habit, DailyProgress, HomeScreenState } from './models/home-models';
+export type {
+  AddHabitFormPayload,
+  AddHabitModalProps,
+  DailyProgress,
+  DateHeaderProps,
+  DayData,
+  EditHabitModalProps,
+  Habit,
+  HabitItemProps,
+  HabitListProps,
+  HabitType,
+  HomeScreenState,
+  HomeStoreState,
+  ProgressSectionProps,
+  WeekProgressMap,
+} from './models/home-models';
 
 // Store
 export { useHomeStore } from './store/home-store';
-
-// Constants
-export { PROGRESS_COMPLETE_THRESHOLD, DEFAULT_HABIT_POINTS, DATE_FORMAT, DATE_FORMAT_FULL } from './constants';
 
 // Utils
 export { formatDate, isToday, calculateProgress } from './utils';
