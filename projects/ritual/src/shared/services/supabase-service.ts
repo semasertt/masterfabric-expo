@@ -14,7 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Constants from 'expo-constants';
 
 // Supabase configuration from environment variables
-// Expo'da environment variables'ları okumak için Constants kullanılır
+// In Expo, use Constants to read environment variables
 const supabaseUrl = 
   Constants.expoConfig?.extra?.supabaseUrl ||
   process.env.EXPO_PUBLIC_SUPABASE_URL;

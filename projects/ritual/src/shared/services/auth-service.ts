@@ -248,7 +248,7 @@ export async function getUserProfile(userId: string): Promise<{ profile: UserPro
  */
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<Pick<UserProfile, 'display_name' | 'avatar_url'>>
+  updates: Partial<Pick<UserProfile, 'display_name' | 'avatar_url' | 'total_points'>>
 ): Promise<{ profile: UserProfile | null; error: Error | null }> {
   if (!supabase) {
     return { profile: null, error: new Error('Supabase not initialized') };
@@ -273,6 +273,21 @@ export async function updateUserProfile(
       error: error instanceof Error ? error : new Error('Unknown error'),
     };
   }
+}
+
+/**
+ * Add (or subtract) Garden Points to the user's profile. Persisted in Supabase user_profiles.total_points.
+ */
+export async function addGardenPoints(userId: string, delta: number): Promise<{ error: Error | null }> {
+  if (!supabase) {
+    return { error: new Error('Supabase not initialized') };
+  }
+  const { profile, error: fetchError } = await getUserProfile(userId);
+  if (fetchError) return { error: fetchError };
+  const current = profile?.total_points ?? 0;
+  const next = Math.max(0, current + delta);
+  const { error } = await updateUserProfile(userId, { total_points: next });
+  return { error };
 }
 
 /**
