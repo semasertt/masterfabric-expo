@@ -4,19 +4,10 @@
 
 import { create } from 'zustand';
 
-interface ProfileState {
-  // Add profile state here
-}
+import type { ProfileStoreFullState, ProfileStoreState } from '../models/profile-models';
 
-interface ProfileStore extends ProfileState {
-  // Add profile store methods here
-}
+const initialState: ProfileStoreState = {};
 
-const initialState: ProfileState = {
-  // Initialize state
-};
-
-export const useProfileStore = create<ProfileStore>((set, get) => ({
+export const useProfileStore = create<ProfileStoreFullState>((set) => ({
   ...initialState,
-  // Add store methods
 }));
