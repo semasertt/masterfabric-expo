@@ -4,7 +4,7 @@
  */
 
 // Ritual's own utils
-export { translateCategoryName } from './category-translations';
+export { getCategoryKey, translateCategoryName } from './category-translations';
 export { getErrorMessage } from './get-error-message';
 
 // ---- Re-exports from masterfabric-expo-core ----
