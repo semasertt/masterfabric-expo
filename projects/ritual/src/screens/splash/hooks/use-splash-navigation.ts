@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+
 import { navigationConfig } from '../../../navigation';
-import { SPLASH_MIN_DISPLAY_TIME, SPLASH_STAY_FOR_LAYOUT } from '../constants';
 import type { SplashNavigationState, SplashNavigationTarget } from '../models/splash-models';
-import { calculateSplashDelay } from '../utils';
-import { FORCE_ONBOARDING_ON_EVERY_LAUNCH, SPLASH_ALWAYS_GO_TO_ONBOARDING } from '../../onboarding/constants';
+import { calculateSplashDelay, SPLASH_MIN_DISPLAY_TIME } from '../utils';
 import { isOnboardingCompleted } from '../../onboarding/utils';
+
+const SPLASH_STAY_FOR_LAYOUT = false;
+const SPLASH_ALWAYS_GO_TO_ONBOARDING = false;
+const FORCE_ONBOARDING_ON_EVERY_LAUNCH = false;
 
 const { routes } = navigationConfig;
 
@@ -47,8 +50,7 @@ export const useSplashNavigation = (): SplashNavigationState => {
           if (isAuthenticated) {
             target = routes.home;
           } else {
-            const onboardingCompleted =
-              FORCE_ONBOARDING_ON_EVERY_LAUNCH ? false : await isOnboardingCompleted();
+            const onboardingCompleted = FORCE_ONBOARDING_ON_EVERY_LAUNCH ? false : await isOnboardingCompleted();
 
             if (onboardingCompleted) {
               target = routes.auth;
