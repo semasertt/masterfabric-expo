@@ -25,6 +25,7 @@ export const ICONS = {
   eye: 'eye-outline' as const,
   eyeOff: 'eye-off-outline' as const,
   settings: 'settings-outline' as const,
+  pin: 'pin' as const,
 } as const;
 
 export type IconName = (typeof ICONS)[keyof typeof ICONS];
