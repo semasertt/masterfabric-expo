@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, ViewStyle, StyleSheet, TouchableOpacity, TouchableOpacityProps } from 'react-native';
+import { StyleSheet, TouchableOpacity, TouchableOpacityProps, View, ViewStyle } from 'react-native';
 import { RITUAL_COLORS } from '../constants';
 
 interface CardProps extends TouchableOpacityProps {
@@ -45,16 +45,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 0,
     marginBottom: 12,
-    borderWidth: 0, // Border kaldırıldı - renk farkı yeterli
+    borderWidth: 0,
     overflow: 'hidden',
   },
   elevated: {
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },

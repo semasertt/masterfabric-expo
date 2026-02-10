@@ -1,14 +1,13 @@
 /**
  * SnackbarQueue Component
- * 
+ *
  * Global snackbar queue renderer
  * Place this in your app root layout
  */
 
 import { Ionicons } from '@expo/vector-icons';
-import { getThemeColors } from 'masterfabric-expo-core';
 import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Animated, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSnackbar } from '../hooks/use-snackbar';
@@ -22,19 +21,16 @@ interface SingleSnackbarProps {
 }
 
 function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
-  const colorScheme = useColorScheme();
-  const isDark = colorScheme === 'dark';
-  const colors = getThemeColors(isDark);
   const insets = useSafeAreaInsets();
-  
+
   const [isExpanded, setIsExpanded] = React.useState(false);
-  
+
   const translateY = useRef(new Animated.Value(100)).current;
   const translateX = useRef(new Animated.Value(0)).current;
   const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Animate in
+    // Animate in (refs are stable, no need in deps)
     Animated.parallel([
       Animated.spring(translateY, {
         toValue: 0,
@@ -48,6 +44,7 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
         useNativeDriver: true,
       }),
     ]).start();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- translateY/opacity are Animated refs, stable
   }, []);
 
   // Swipe to dismiss gesture
@@ -63,7 +60,7 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
     })
     .onEnd((event) => {
       const shouldDismiss = event.translationX > 80 || event.velocityX > 500;
-      
+
       if (shouldDismiss) {
         Animated.parallel([
           Animated.timing(translateX, {
@@ -95,13 +92,13 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
     });
 
   const getSnackbarColors = () => {
-    const customBg = (snackbar as any).customColor;
-    const customIcon = (snackbar as any).customIcon;
-    
+    const customBg = snackbar.customColor;
+    const customIcon = snackbar.customIcon;
+
     if (customBg) {
       return {
         background: customBg,
-        icon: '#FFFFFF',
+        icon: RITUAL_COLORS.text.primary,
         iconName: 'information-circle' as const,
         customIcon: customIcon,
       };
@@ -110,30 +107,30 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
     switch (snackbar.type) {
       case 'success':
         return {
-          background: RITUAL_COLORS.accent.primary,
-          icon: '#FFFFFF',
+          background: RITUAL_COLORS.status.success,
+          icon: RITUAL_COLORS.text.primary,
           iconName: 'checkmark-circle' as const,
           customIcon: undefined,
         };
       case 'error':
         return {
           background: RITUAL_COLORS.status.error,
-          icon: '#FFFFFF',
+          icon: RITUAL_COLORS.text.primary,
           iconName: 'close-circle' as const,
           customIcon: undefined,
         };
       case 'warning':
         return {
-          background: RITUAL_COLORS.status.warning || '#FFA500',
-          icon: '#FFFFFF',
+          background: RITUAL_COLORS.status.warning,
+          icon: RITUAL_COLORS.text.primary,
           iconName: 'warning' as const,
           customIcon: undefined,
         };
       case 'info':
       default:
         return {
-          background: RITUAL_COLORS.accent.primary,
-          icon: '#FFFFFF',
+          background: RITUAL_COLORS.status.info,
+          icon: RITUAL_COLORS.text.primary,
           iconName: 'information-circle' as const,
           customIcon: undefined,
         };
@@ -143,7 +140,7 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
   const snackbarColors = getSnackbarColors();
   const isTop = snackbar.position === 'top';
   const isCenter = snackbar.position === 'center';
-  
+
   // Calculate vertical offset for stacking
   const stackOffset = index * 68;
   const bottomPosition = isTop || isCenter ? undefined : insets.bottom + 16 + stackOffset;
@@ -185,7 +182,7 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
           <View style={styles.contentContainer}>
             <View style={styles.iconContainer}>
               {snackbarColors.customIcon ? (
-                <Text style={{ fontSize: 32, lineHeight: 32, color: '#FFFFFF' }}>
+                <Text style={{ fontSize: 32, lineHeight: 32, color: RITUAL_COLORS.text.primary }}>
                   {snackbarColors.customIcon}
                 </Text>
               ) : (
@@ -196,13 +193,13 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
                 />
               )}
             </View>
-            
+
             <Pressable onPress={() => setIsExpanded(!isExpanded)} style={{ flex: 1 }}>
               <Text
                 style={[
-                  styles.message, 
-                  { 
-                    color: '#FFFFFF',
+                  styles.message,
+                  {
+                    color: RITUAL_COLORS.text.primary,
                     flex: undefined,
                     flexShrink: 1,
                   }
@@ -225,8 +222,8 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
               <Text
                 style={[
                   styles.actionText,
-                  { 
-                    color: '#FFFFFF',
+                  {
+                    color: RITUAL_COLORS.text.primary,
                     fontSize: snackbar.action.label.length <= 2 ? 28 : 14,
                   },
                 ]}
@@ -242,7 +239,7 @@ function SingleSnackbar({ snackbar, index, onDismiss }: SingleSnackbarProps) {
           style={styles.closeButton}
           hitSlop={8}
         >
-          <Ionicons name="close" size={20} color="#FFFFFF" />
+          <Ionicons name="close" size={20} color={RITUAL_COLORS.text.primary} />
         </Pressable>
       </View>
       </Animated.View>
@@ -265,17 +262,39 @@ export function SnackbarQueue() {
     ...(centerSnackbars.length > 0 ? [centerSnackbars[centerSnackbars.length - 1]] : [])
   ];
 
+  const topCenterSnackbar = centerSnackbars.length > 0 ? centerSnackbars[centerSnackbars.length - 1] : null;
+
+  const handleBackdropPress = () => {
+    if (topCenterSnackbar) {
+      dismissSnackbar(topCenterSnackbar.id);
+    }
+  };
+
   return (
-    <>
-      {displaySnackbars.map((snackbar, index) => (
-        <SingleSnackbar
-          key={snackbar.id}
-          snackbar={snackbar}
-          index={snackbar.position === 'center' ? 0 : index}
-          onDismiss={dismissSnackbar}
-        />
-      ))}
-    </>
+    <Modal
+      visible={displaySnackbars.length > 0}
+      transparent
+      statusBarTranslucent
+      animationType="none"
+      onRequestClose={handleBackdropPress}
+    >
+      <View style={StyleSheet.absoluteFillObject} pointerEvents="box-none">
+        {topCenterSnackbar && (
+          <Pressable
+            style={[StyleSheet.absoluteFillObject, { backgroundColor: RITUAL_COLORS.overlay.backdrop }]}
+            onPress={handleBackdropPress}
+          />
+        )}
+        {displaySnackbars.map((snackbar, index) => (
+          <SingleSnackbar
+            key={snackbar.id}
+            snackbar={snackbar}
+            index={snackbar.position === 'center' ? 0 : index}
+            onDismiss={dismissSnackbar}
+          />
+        ))}
+      </View>
+    </Modal>
   );
 }
 
