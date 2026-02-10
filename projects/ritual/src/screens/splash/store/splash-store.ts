@@ -1,20 +1,15 @@
 /**
  * Splash Screen Store (Zustand)
- * 
- * Note: For splash screen, we might not need a store since it's a simple screen.
- * This is included for consistency with the standard screen structure.
- * If needed in the future, we can add state management here.
  */
 
 import { create } from 'zustand';
-import { SplashScreenState, SplashNavigationState, SplashTimingState } from '../models/splash-models';
 
-interface SplashStore {
-  state: SplashScreenState;
-  setNavigationState: (state: Partial<SplashNavigationState>) => void;
-  setTimingState: (state: Partial<SplashTimingState>) => void;
-  reset: () => void;
-}
+import type {
+  SplashNavigationState,
+  SplashScreenState,
+  SplashStoreState,
+  SplashTimingState,
+} from '../models/splash-models';
 
 const initialState: SplashScreenState = {
   navigation: {
@@ -29,7 +24,7 @@ const initialState: SplashScreenState = {
   },
 };
 
-export const useSplashStore = create<SplashStore>((set) => ({
+export const useSplashStore = create<SplashStoreState>((set) => ({
   state: initialState,
   
   setNavigationState: (newState) =>
