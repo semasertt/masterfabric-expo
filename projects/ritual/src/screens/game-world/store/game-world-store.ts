@@ -4,19 +4,10 @@
 
 import { create } from 'zustand';
 
-interface GameWorldState {
-  // Add game world state here
-}
+import type { GameWorldStoreFullState, GameWorldStoreState } from '../models/game-world-models';
 
-interface GameWorldStore extends GameWorldState {
-  // Add game world store methods here
-}
+const initialState: GameWorldStoreState = {};
 
-const initialState: GameWorldState = {
-  // Initialize state
-};
-
-export const useGameWorldStore = create<GameWorldStore>((set, get) => ({
+export const useGameWorldStore = create<GameWorldStoreFullState>((set) => ({
   ...initialState,
-  // Add store methods
 }));
