@@ -3,14 +3,14 @@
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import type { OnboardingStep } from '../models/onboarding-models';
-import {
-  ONBOARDING_COMPLETED_KEY,
-  ONBOARDING_I18N_PREFIX,
-  ONBOARDING_IONICON_NAMES,
-  ONBOARDING_STEP_ICONS,
-  TOTAL_STEPS,
-} from '../constants';
+
+export const ONBOARDING_COMPLETED_KEY = 'ritual_onboarding_completed';
+export const TOTAL_STEPS = 3;
+
+const ONBOARDING_STEP_ICONS = ['📝', 'layers-outline', 'earth-outline'] as const;
+const ONBOARDING_IONICON_NAMES = ['layers-outline', 'earth-outline'] as const;
 
 type TranslateFn = (key: string) => string;
 
@@ -28,8 +28,8 @@ export const getOnboardingSteps = (t: TranslateFn): OnboardingStep[] =>
   Array.from({ length: TOTAL_STEPS }, (_, i) => ({
     id: i,
     icon: ONBOARDING_STEP_ICONS[i],
-    title: t(`${ONBOARDING_I18N_PREFIX}.step${i + 1}.title`),
-    description: t(`${ONBOARDING_I18N_PREFIX}.step${i + 1}.description`),
+    title: t(`screens.onboarding.step${i + 1}.title`),
+    description: t(`screens.onboarding.step${i + 1}.description`),
   }));
 
 /**
