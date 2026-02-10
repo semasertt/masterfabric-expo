@@ -1,19 +1,17 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ICONS } from '../../../assets';
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ICONS } from '../../../assets';
 import { Card } from '../../../shared/components';
 import { RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
 import { translateCategoryName } from '../../../shared/utils';
-import { HABIT_ITEM_ICON_SIZES, HABIT_TOGGLE_DELAY_MS } from '../constants';
 import type { HabitItemProps } from '../models/home-models';
 import { useHomeStore } from '../store/home-store';
 import { createStyles } from '../styles/habit-item.styles';
-import { isToday } from '../utils';
+import { canCompleteHabitNow, isToday } from '../utils';
 
-
-export const HabitItem: React.FC<HabitItemProps> = ({
+const HabitItemInner: React.FC<HabitItemProps> = ({
   habit,
   onToggle,
   onMenuPress,
@@ -24,37 +22,36 @@ export const HabitItem: React.FC<HabitItemProps> = ({
 
   const categoryColor = habit.category?.color || RITUAL_COLORS.accent.primary;
 
-  // Check if selected date is in the future or past (can only edit today)
-  const canEdit = isToday(selectedDate);
+  const isTodaySelected = isToday(selectedDate);
+  // Can complete only in time window; can uncomplete any time today
+  const canToggle = isTodaySelected && (habit.is_completed || canCompleteHabitNow(habit));
 
-  const handlePress = async () => {
-    if (!canEdit || isLoading) return;
-    
+  const handlePress = useCallback(async () => {
+    if (!canToggle || isLoading) return;
     setIsLoading(true);
-    
     setTimeout(async () => {
       await onToggle(habit.id);
       setIsLoading(false);
-    }, HABIT_TOGGLE_DELAY_MS);
-  };
+    }, 150);
+  }, [canToggle, isLoading, onToggle, habit.id]);
 
   return (
     <Card style={styles.container}>
       <View style={styles.contentWrapper}>
-        <TouchableOpacity
+                <TouchableOpacity
           style={[
             styles.checkbox,
             (habit.is_completed || isLoading) ? styles.checkboxChecked : styles.checkboxUnchecked,
             (habit.is_completed || isLoading) && { backgroundColor: categoryColor },
-            !canEdit && styles.checkboxDisabled,
+            !canToggle && styles.checkboxDisabled,
           ]}
           onPress={handlePress}
-          disabled={!canEdit || isLoading}
+          disabled={!canToggle || isLoading}
         >
           {isLoading ? (
-            <ActivityIndicator size={HABIT_ITEM_ICON_SIZES.checkbox} color={RITUAL_COLORS.text.primary} />
-          ) : habit.is_completed && canEdit ? (
-            <Ionicons name={ICONS.checkmark} size={HABIT_ITEM_ICON_SIZES.checkbox} color={RITUAL_COLORS.text.primary} />
+            <ActivityIndicator size={16} color={RITUAL_COLORS.text.primary} />
+          ) : habit.is_completed && canToggle ? (
+            <Ionicons name={ICONS.checkmark} size={16} color={RITUAL_COLORS.text.primary} />
           ) : null}
         </TouchableOpacity>
         <View style={styles.content}>
@@ -75,24 +72,45 @@ export const HabitItem: React.FC<HabitItemProps> = ({
                 ]}
               >
                 <Text style={styles.categoryBadgeText}>
-                  {translateCategoryName(habit.category.name.toUpperCase())}
+                  {translateCategoryName(habit.category.name)}
                 </Text>
               </View>
             )}
+            {habit.habit_type === 'quantitative' && habit.daily_target != null && (
+              <Text style={styles.timeRangeText}>
+                {habit.completion_value != null
+                  ? `${habit.completion_value} / ${habit.daily_target} ${habit.unit ?? ''}`
+                  : `0 / ${habit.daily_target} ${habit.unit ?? ''}`}
+              </Text>
+            )}
+            {habit.start_time && habit.end_time && (
+              <Text style={styles.timeRangeText}>
+                {habit.start_time} – {habit.end_time}
+              </Text>
+            )}
             {habit.is_completed && (
               <Text style={styles.pointsText}>
-                {t('screens.home.points', { points: habit.points })}
+                {t('screens.home.points', { points: habit?.points ?? 10 })}
               </Text>
             )}
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.menuButton}
-          onPress={() => onMenuPress?.(habit.id)}
-        >
-          <Ionicons name={ICONS.ellipsisVertical} size={HABIT_ITEM_ICON_SIZES.menu} color={RITUAL_COLORS.text.primary} />
-        </TouchableOpacity>
+        <View style={styles.menuRow}>
+          {(habit.is_pinned ?? false) && (
+            <View style={styles.pinIconWrap} pointerEvents="none">
+              <Ionicons name={ICONS.pin} size={16} color={RITUAL_COLORS.text.secondary} />
+            </View>
+          )}
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => onMenuPress?.(habit.id)}
+          >
+            <Ionicons name={ICONS.ellipsisVertical} size={20} color={RITUAL_COLORS.text.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </Card>
   );
 };
+
+export const HabitItem = React.memo(HabitItemInner);

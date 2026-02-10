@@ -1,11 +1,12 @@
-import { Ionicons } from '@expo/vector-icons';
-import { snackbarHelper } from 'masterfabric-expo-core';
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+
 import { ICONS } from '../../../assets';
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { t } from '../../../shared/i18n';
-import { FAB_ICON_SIZES } from '../constants';
+import { onAuthStateChange } from '../../../shared/services/auth-service';
+import type { AddHabitFormPayload } from '../models/home-models';
 import { useHomeStore } from '../store/home-store';
 import { createStyles } from '../styles/home-screen.styles';
 import { AddHabitModal } from './add-habit-modal';
@@ -23,14 +24,33 @@ export const HomeScreen: React.FC = () => {
   const {
     habits,
     progress,
+    selectedDate,
     error,
     toggleHabit,
     addHabit,
     refreshData,
+    syncPointsFromProfile,
   } = useHomeStore();
 
   useEffect(() => {
     refreshData();
+  }, [refreshData]);
+
+  // Refresh GP from backend whenever screen gains focus (e.g. returning from Game World or app coming to foreground)
+  useFocusEffect(
+    useCallback(() => {
+      syncPointsFromProfile();
+    }, [syncPointsFromProfile])
+  );
+
+  // Reload habits when auth session is restored (e.g. app reopen) so we don't show empty list
+  useEffect(() => {
+    const { unsubscribe } = onAuthStateChange((session) => {
+      if (session?.user) {
+        refreshData();
+      }
+    });
+    return unsubscribe;
   }, [refreshData]);
 
   // Debug: Log errors if any
@@ -40,20 +60,22 @@ export const HomeScreen: React.FC = () => {
     }
   }, [error]);
 
-  const handleAddHabit = (name: string, categoryId: string, daysOfWeek: number[], points: number) => {
-    addHabit(name, categoryId, daysOfWeek, points);
-  };
+  const handleAddHabit = useCallback(
+    (payload: AddHabitFormPayload) => {
+      addHabit(payload);
+    },
+    [addHabit]
+  );
 
-  const handleEditHabit = (habitId: string) => {
-    snackbarHelper.info(t('screens.home.editHabitInfo'));
+  const handleEditHabit = useCallback((habitId: string) => {
     setEditingHabitId(habitId);
     setIsEditModalVisible(true);
-  };
+  }, []);
 
-  const handleCloseEditModal = () => {
+  const handleCloseEditModal = useCallback(() => {
     setIsEditModalVisible(false);
     setEditingHabitId(null);
-  };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -67,6 +89,7 @@ export const HomeScreen: React.FC = () => {
         <ProgressSection progress={progress} />
         <HabitList
           habits={habits}
+          selectedDate={selectedDate}
           onToggleHabit={toggleHabit}
           onMenuPress={handleEditHabit}
         />
@@ -78,7 +101,7 @@ export const HomeScreen: React.FC = () => {
         onPress={() => setIsAddModalVisible(true)}
         activeOpacity={0.8}
       >
-      <Ionicons name={ICONS.add} size={FAB_ICON_SIZES.add} color={RITUAL_COLORS.text.primary} />
+      <Ionicons name={ICONS.add} size={29} color={RITUAL_COLORS.text.primary} />
       </TouchableOpacity>
       {/* Add Habit Modal */}
       <AddHabitModal

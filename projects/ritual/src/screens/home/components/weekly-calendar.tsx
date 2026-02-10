@@ -1,5 +1,10 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, FlatList, Text, TouchableOpacity, View } from 'react-native';
+import { CustomDatePickerModal } from './custom-date-picker-modal';
+import { Dimensions, FlatList, Modal, Platform, Text, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle, G } from 'react-native-svg';
+import { useShallow } from 'zustand/react/shallow';
 import { RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
 import type { DayData } from '../models/home-models';
@@ -10,41 +15,102 @@ import {
   generateWeeks as generateWeeksUtil,
   getWeekStart,
 } from '../utils/calendar-utils';
-import {
-  WEEKLY_CALENDAR_INITIAL_INDEX,
-  WEEKLY_CALENDAR_INFINITE_THRESHOLD_BOTTOM,
-  WEEKLY_CALENDAR_INFINITE_THRESHOLD_TOP,
-  WEEKLY_CALENDAR_SCROLL_DELAY_MS,
-  WEEKLY_CALENDAR_WEEKS_AFTER,
-  WEEKLY_CALENDAR_WEEKS_BEFORE,
-  YEAR_PICKER_MAX,
-  YEAR_PICKER_MIN,
-} from '../constants';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
+const dayCircleSize = 28;
+const progressStrokeWidth = 2.5;
+const progressRadius = (dayCircleSize - progressStrokeWidth) / 2;
+const progressCircumference = 2 * Math.PI * progressRadius;
+
+function toLocalDateStr(d: Date): string {
+  return [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+}
+
+const styles = createStyles();
+
+/** Memoized week row – reduces VirtualizedList warnings and unnecessary re-renders */
+const WeekRow = React.memo<{ week: DayData[]; onDayPress: (day: DayData) => void }>(function WeekRow({ week, onDayPress }) {
+  const weekKey = week.map((d) => d.date.getTime()).join('-');
+  const dateKeys = useMemo(() => week.map((d) => toLocalDateStr(d.date)), [weekKey]);
+  const weekProgressSelector = useCallback(
+    (s: { weekProgress: Record<string, { total: number; completed: number }> }) => {
+      const map: Record<string, { total: number; completed: number }> = {};
+      for (const k of dateKeys) {
+        if (s.weekProgress[k]) map[k] = s.weekProgress[k];
+      }
+      return map;
+    },
+    [dateKeys]
+  );
+  const weekProgressSlice = useHomeStore(useShallow(weekProgressSelector));
+  return (
+    <View style={styles.weekContainer}>
+      {week.map((day, index) => {
+        const isToday = day.isToday;
+        const isSelected = day.isSelected;
+        const dateKey = toLocalDateStr(day.date);
+        const dayProgress = weekProgressSlice[dateKey];
+        const rawPct =
+          dayProgress && dayProgress.total > 0 ? dayProgress.completed / dayProgress.total : 0;
+        const progressPct = Math.min(1, Math.max(0, rawPct));
+        const strokeDashArray =
+          progressPct > 0
+            ? `${progressCircumference * progressPct} ${progressCircumference * (1 - progressPct)}`
+            : undefined;
+        return (
+          <TouchableOpacity
+            key={`${day.date.getTime()}-${index}`}
+            style={styles.dayContainer}
+            onPress={() => onDayPress(day)}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.dayName, isToday && styles.dayNameToday]}>{day.dayName}</Text>
+            <View style={styles.dayCircleWrapper}>
+              <View style={styles.dayCircleSvg} pointerEvents="none">
+                <Svg width={dayCircleSize} height={dayCircleSize} viewBox={`0 0 ${dayCircleSize} ${dayCircleSize}`}>
+                  <G rotation={-90} origin={`${dayCircleSize / 2}, ${dayCircleSize / 2}`}>
+                    <Circle
+                      cx={dayCircleSize / 2}
+                      cy={dayCircleSize / 2}
+                      r={progressRadius}
+                      stroke={RITUAL_COLORS.border.divider}
+                      strokeWidth={progressStrokeWidth}
+                      fill="transparent"
+                    />
+                    {strokeDashArray != null && (
+                      <Circle
+                        cx={dayCircleSize / 2}
+                        cy={dayCircleSize / 2}
+                        r={progressRadius}
+                        stroke={RITUAL_COLORS.accent.primary}
+                        strokeWidth={progressStrokeWidth}
+                        fill="transparent"
+                        strokeDasharray={strokeDashArray}
+                        strokeLinecap="round"
+                      />
+                    )}
+                  </G>
+                </Svg>
+              </View>
+              <View style={[styles.dayCircle, isSelected && styles.dayCircleSelected]}>
+                <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>{day.day}</Text>
+              </View>
+            </View>
+            {isToday && <View style={styles.todayDot} />}
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+});
+
 export const WeeklyCalendar: React.FC = () => {
   const styles = createStyles();
+  const insets = useSafeAreaInsets();
   const { selectedDate, setSelectedDate } = useHomeStore();
-  const [showYearPicker, setShowYearPicker] = useState(false);
-  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const flatListRef = useRef<FlatList>(null);
-  const yearListRef = useRef<FlatList>(null);
-
-  const monthNames = [
-    t('calendar.months.january'),
-    t('calendar.months.february'),
-    t('calendar.months.march'),
-    t('calendar.months.april'),
-    t('calendar.months.may'),
-    t('calendar.months.june'),
-    t('calendar.months.july'),
-    t('calendar.months.august'),
-    t('calendar.months.september'),
-    t('calendar.months.october'),
-    t('calendar.months.november'),
-    t('calendar.months.december'),
-  ];
 
   const dayNames = useMemo(
     () => [
@@ -65,8 +131,8 @@ export const WeeklyCalendar: React.FC = () => {
         centerDate,
         currentSelectedDate,
         dayNames,
-        WEEKLY_CALENDAR_WEEKS_BEFORE,
-        WEEKLY_CALENDAR_WEEKS_AFTER
+        12,
+        4
       ),
     [dayNames]
   );
@@ -98,247 +164,130 @@ export const WeeklyCalendar: React.FC = () => {
     if (weeks.length > 0 && !initialScrollDone.current && flatListRef.current) {
       setTimeout(() => {
         flatListRef.current?.scrollToIndex({
-          index: WEEKLY_CALENDAR_INITIAL_INDEX,
+          index: 12,
           animated: false,
         });
         initialScrollDone.current = true;
-      }, WEEKLY_CALENDAR_SCROLL_DELAY_MS);
+      }, 100);
     }
   }, [weeks]);
 
-  const handleScroll = (event: any) => {
-    const contentOffsetX = event.nativeEvent.contentOffset.x;
-    const index = Math.round(contentOffsetX / SCREEN_WIDTH);
+  const handleScroll = useCallback(
+    (event: { nativeEvent: { contentOffset: { x: number } } }) => {
+      const contentOffsetX = event.nativeEvent.contentOffset.x;
+      const index = Math.round(contentOffsetX / SCREEN_WIDTH);
+      setWeeks((prevWeeks) => {
+        if (prevWeeks.length === 0) return prevWeeks;
+        if (index <= 2) {
+          const firstWeek = prevWeeks[0];
+          const newWeekStart = new Date(firstWeek[0].date);
+          newWeekStart.setDate(newWeekStart.getDate() - 7);
+          return [generateWeek(newWeekStart, selectedDate, dayNames), ...prevWeeks];
+        }
+        if (index >= prevWeeks.length - 3) {
+          const lastWeek = prevWeeks[prevWeeks.length - 1];
+          const newWeekStart = new Date(lastWeek[6].date);
+          newWeekStart.setDate(newWeekStart.getDate() + 1);
+          return [...prevWeeks, generateWeek(newWeekStart, selectedDate, dayNames)];
+        }
+        return prevWeeks;
+      });
+    },
+    [selectedDate, dayNames]
+  );
 
-    if (index <= WEEKLY_CALENDAR_INFINITE_THRESHOLD_TOP && weeks.length > 0) {
-      const firstWeek = weeks[0];
-      const newWeekStart = new Date(firstWeek[0].date);
-      newWeekStart.setDate(newWeekStart.getDate() - 7);
-      const newWeeks = [
-        generateWeek(newWeekStart, selectedDate, dayNames),
-        ...weeks,
-      ];
-      setWeeks(newWeeks);
-    } else if (index >= weeks.length - WEEKLY_CALENDAR_INFINITE_THRESHOLD_BOTTOM) {
-      const lastWeek = weeks[weeks.length - 1];
-      const newWeekStart = new Date(lastWeek[6].date);
-      newWeekStart.setDate(newWeekStart.getDate() + 1);
-      const newWeeks = [
-        ...weeks,
-        generateWeek(newWeekStart, selectedDate, dayNames),
-      ];
-      setWeeks(newWeeks);
+  const handleDayPress = useCallback((day: DayData) => {
+    setSelectedDate(day.date);
+  }, [setSelectedDate]);
+
+  const onDatePickerChange = (event: { type: string }, date?: Date) => {
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+    }
+    if (date) {
+      const normalized = new Date(date);
+      normalized.setHours(0, 0, 0, 0);
+      setSelectedDate(normalized);
+      if (Platform.OS === 'ios') setShowDatePicker(false);
     }
   };
 
-  const handleDayPress = (day: DayData) => {
-    setSelectedDate(day.date);
-  };
+  const renderItem = useCallback(
+    ({ item: week }: { item: DayData[] }) => <WeekRow week={week} onDayPress={handleDayPress} />,
+    [handleDayPress]
+  );
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  
-  const todayMonth = today.getMonth();
-  
-  // Display selected date's month and year
-  const currentYear = selectedDate.getFullYear().toString();
-  const currentMonth = selectedDate.getMonth();
-  const shortMonthName = monthNames[currentMonth].slice(0, 3);
+  const onScrollToIndexFailed = useCallback((info: { index: number; averageItemLength: number }) => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToOffset({
+        offset: info.averageItemLength * info.index,
+        animated: false,
+      });
+    }, 100);
+  }, []);
 
-  const years = useMemo(
-    () =>
-      Array.from(
-        { length: YEAR_PICKER_MAX - YEAR_PICKER_MIN + 1 },
-        (_, i) => YEAR_PICKER_MIN + i
-      ),
+  const keyExtractor = useCallback(
+    (item: DayData[], index: number) => `week-${item[0]?.date.getTime() ?? index}`,
     []
   );
 
-  const months = monthNames.map((name, index) => ({ index, name }));
-
-  const handleYearSelect = (year: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setFullYear(year);
-    setSelectedDate(newDate);
-    setShowYearPicker(false);
-  };
-
-  const selectedYear = selectedDate.getFullYear();
-  const yearPickerScrollIndex = Math.max(
-    0,
-    Math.min(selectedYear - YEAR_PICKER_MIN, years.length - 1)
-  );
-
-  useEffect(() => {
-    if (showYearPicker && yearListRef.current && years.length > 0) {
-      setTimeout(() => {
-        yearListRef.current?.scrollToIndex({
-          index: yearPickerScrollIndex,
-          animated: true,
-          viewPosition: 0.3,
-        });
-      }, 100);
-    }
-  }, [showYearPicker, yearPickerScrollIndex, years.length]);
-
-  const handleMonthSelect = (monthIndex: number) => {
-    const newDate = new Date(selectedDate);
-    newDate.setMonth(monthIndex);
-    setSelectedDate(newDate);
-    setShowMonthPicker(false);
-  };
-
-  const renderItem = ({ item: week }: { item: DayData[] }) => (
-    <View style={styles.weekContainer}>
-      {week.map((day, index) => {
-        const isToday = day.isToday;
-        const isSelectedOther = day.isSelected && !day.isToday;
-        return (
-          <TouchableOpacity
-            key={`${day.date.getTime()}-${index}`}
-            style={styles.dayContainer}
-            onPress={() => handleDayPress(day)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.dayName,
-                isToday && styles.dayNameToday,
-                isSelectedOther && styles.dayNameSelectedMuted,
-              ]}
-            >
-              {day.dayName}
-            </Text>
-            <View
-              style={[
-                styles.dayCircle,
-                isToday && styles.dayCircleSelected,
-                isSelectedOther && styles.dayCircleSelectedMuted,
-              ]}
-            >
-              <Text
-                style={[
-                  styles.dayNumber,
-                  isToday && styles.dayNumberToday,
-                  isSelectedOther && styles.dayNumberSelectedMuted,
-                ]}
-              >
-                {day.day}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        );
-      })}
-    </View>
+  const getItemLayout = useCallback(
+    (_: DayData[] | null, index: number) => ({
+      length: SCREEN_WIDTH,
+      offset: SCREEN_WIDTH * index,
+      index,
+    }),
+    []
   );
 
   return (
     <View style={styles.container}>
-      {/* Month + Year seçimi – Feb (ay), 2026 (yıl) */}
+      {/* This Week (left) | View All (right) */}
       <View style={styles.header}>
-        <View style={styles.dateSelectorRow}>
-          <TouchableOpacity
-            style={styles.dateSelector}
-            onPress={() => {
-              setShowMonthPicker(!showMonthPicker);
-              setShowYearPicker(false);
-            }}
-          >
-            <Text style={styles.dateSelectorText}>{shortMonthName}</Text>
-            <Text style={styles.chevron}>▼</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.dateSelector}
-            onPress={() => {
-              setShowYearPicker(!showYearPicker);
-              setShowMonthPicker(false);
-            }}
-          >
-            <Text style={styles.dateSelectorText}>{currentYear}</Text>
-            <Text style={styles.chevron}>▼</Text>
-          </TouchableOpacity>
-        </View>
-        {showMonthPicker && (
-          <View style={styles.pickerContainer}>
-            <View style={styles.pickerHeader}>
-              <Text style={styles.pickerTitle}>{t('calendar.selectMonth')}</Text>
-              <TouchableOpacity onPress={() => setShowMonthPicker(false)}>
-                <Text style={styles.pickerClose}>{t('calendar.close')}</Text>
-              </TouchableOpacity>
-            </View>
-            <View style={styles.pickerGrid}>
-              {months.map((month) => {
-                const isTodayMonth = todayMonth === month.index;
-                return (
-                  <TouchableOpacity
-                    key={month.index}
-                    style={[
-                      styles.pickerItem,
-                      isTodayMonth && styles.pickerItemSelected,
-                    ]}
-                    onPress={() => handleMonthSelect(month.index)}
-                  >
-                    <Text
-                      style={[
-                        styles.pickerItemText,
-                        isTodayMonth && styles.pickerItemTextSelected,
-                      ]}
-                    >
-                      {month.name}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </View>
-        )}
+        <Text style={styles.thisWeekTitle}>{t('screens.home.thisWeek')}</Text>
+        <TouchableOpacity
+          style={styles.viewAllButton}
+          onPress={() => setShowDatePicker(true)}
+        >
+          <Text style={styles.viewAllText}>{t('screens.home.viewAll')}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* Year Picker – sabit aralık (1950–2041), scroll ile */}
-      {showYearPicker && (
-        <View style={styles.yearPickerContainer}>
-          <View style={styles.pickerHeader}>
-            <Text style={styles.pickerTitle}>{t('calendar.selectYear')}</Text>
-            <TouchableOpacity onPress={() => setShowYearPicker(false)}>
-              <Text style={styles.pickerClose}>{t('calendar.close')}</Text>
-            </TouchableOpacity>
+      {/* Android: in-app themed date picker (we do not use native dialog) */}
+      {Platform.OS === 'android' && (
+        <CustomDatePickerModal
+          visible={showDatePicker}
+          value={selectedDate}
+          onSelect={(date) => {
+            const n = new Date(date);
+            n.setHours(0, 0, 0, 0);
+            setSelectedDate(n);
+            setShowDatePicker(false);
+          }}
+          onClose={() => setShowDatePicker(false)}
+        />
+      )}
+      {/* iOS: system date picker */}
+      {showDatePicker && Platform.OS === 'ios' && (
+        <Modal visible transparent animationType="slide">
+          <View style={styles.datePickerModal}>
+            <View style={[styles.datePickerModalContent, { paddingBottom: 32 + insets.bottom }]}>
+              <DateTimePicker
+                value={selectedDate}
+                mode="date"
+                display="spinner"
+                themeVariant="dark"
+                onChange={onDatePickerChange}
+              />
+              <TouchableOpacity
+                style={styles.datePickerDoneButton}
+                onPress={() => setShowDatePicker(false)}
+              >
+                <Text style={styles.datePickerDoneText}>{t('calendar.close')}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-          <FlatList
-            ref={yearListRef}
-            data={years}
-            keyExtractor={(y) => String(y)}
-            initialScrollIndex={yearPickerScrollIndex}
-            onScrollToIndexFailed={() => {}}
-            getItemLayout={(_, index) => ({
-              length: 48,
-              offset: 48 * index,
-              index,
-            })}
-            style={styles.yearPickerListScroll}
-            contentContainerStyle={styles.yearPickerList}
-            renderItem={({ item: year }) => {
-              const isSelected = selectedYear === year;
-              return (
-                <TouchableOpacity
-                  style={[
-                    styles.yearPickerItem,
-                    isSelected && styles.yearPickerItemSelected,
-                  ]}
-                  onPress={() => handleYearSelect(year)}
-                >
-                  <Text
-                    style={[
-                      styles.yearPickerItemText,
-                      isSelected && styles.yearPickerItemTextSelected,
-                    ]}
-                  >
-                    {year}
-                  </Text>
-                </TouchableOpacity>
-              );
-            }}
-          />
-        </View>
+        </Modal>
       )}
 
       {/* Weekly Calendar */}
@@ -351,23 +300,15 @@ export const WeeklyCalendar: React.FC = () => {
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             renderItem={renderItem}
-            keyExtractor={(item, index) => `week-${item[0]?.date.getTime() || index}`}
+            keyExtractor={keyExtractor}
             onScroll={handleScroll}
             scrollEventThrottle={16}
-            initialScrollIndex={WEEKLY_CALENDAR_INITIAL_INDEX}
-            onScrollToIndexFailed={(info) => {
-              setTimeout(() => {
-                flatListRef.current?.scrollToOffset({
-                  offset: info.averageItemLength * info.index,
-                  animated: false,
-                });
-              }, WEEKLY_CALENDAR_SCROLL_DELAY_MS);
-            }}
-            getItemLayout={(_, index) => ({
-              length: SCREEN_WIDTH,
-              offset: SCREEN_WIDTH * index,
-              index,
-            })}
+            initialScrollIndex={12}
+            initialNumToRender={3}
+            maxToRenderPerBatch={2}
+            windowSize={5}
+            onScrollToIndexFailed={onScrollToIndexFailed}
+            getItemLayout={getItemLayout}
             removeClippedSubviews={false}
           />
         </View>

@@ -1,27 +1,29 @@
 import { Ionicons } from '@expo/vector-icons';
-import { ICONS } from '../../../assets';
 import { snackbarHelper } from 'masterfabric-expo-core';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    KeyboardAvoidingView,
+    Modal,
+    Platform,
+    ScrollView,
+    Switch,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { RITUAL_COLORS } from '../../../shared/constants';
+import { ICONS } from '../../../assets';
+import { DAYS_OF_WEEK, RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
 import { deleteHabit, getHabitCategories, updateHabit, type HabitCategory } from '../../../shared/services/habits-service';
 import { snackbarService } from '../../../shared/services/snackbar-service';
 import { translateCategoryName } from '../../../shared/utils';
-import { CATEGORY_FILTER_TERMS, DAYS_OF_WEEK, MODAL_ICON_SIZES, SNACKBAR_CONFIRM_DURATION } from '../constants';
 import type { EditHabitModalProps } from '../models/home-models';
 import { useHomeStore } from '../store/home-store';
 import { createStyles } from '../styles/edit-habit-modal.styles';
-import { filterHabitCategories } from '../utils';
+import { filterHabitCategories, formatTimeInput, getCategoryIconName, timeToMinutes, validateTimeString } from '../utils';
+
+const CATEGORY_FILTER_TERMS = ['ruh sağlığı', 'mental health', 'örnek', 'example'] as const;
 
 export const EditHabitModal: React.FC<EditHabitModalProps> = ({
   visible,
@@ -34,16 +36,22 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
 
   const [name, setName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
   const [daysOfWeek, setDaysOfWeek] = useState<number[]>([]);
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [categories, setCategories] = useState<HabitCategory[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Track initial values to detect changes
   const [initialName, setInitialName] = useState('');
   const [initialCategory, setInitialCategory] = useState<string>('');
+  const [initialStartTime, setInitialStartTime] = useState('');
+  const [initialEndTime, setInitialEndTime] = useState('');
   const [initialDays, setInitialDays] = useState<number[]>([]);
+  const [isPinned, setIsPinned] = useState(false);
+  const [initialPinned, setInitialPinned] = useState(false);
 
   const loadCategories = useCallback(async () => {
     setLoadingCategories(true);
@@ -65,19 +73,28 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
     if (visible && habit) {
       setName(habit.name);
       setSelectedCategory(habit.category_id);
+      const st = habit.start_time ?? '';
+      const et = habit.end_time ?? '';
+      setStartTime(st);
+      setEndTime(et);
       setDaysOfWeek(habit.days_of_week || []);
       setInitialName(habit.name);
       setInitialCategory(habit.category_id);
+      setInitialStartTime(st);
+      setInitialEndTime(et);
       setInitialDays(habit.days_of_week || []);
+      setIsPinned(habit.is_pinned ?? false);
+      setInitialPinned(habit.is_pinned ?? false);
       loadCategories();
     }
   }, [visible, habit, loadCategories]);
 
-  // Check if anything changed
+  const pinChanged = isPinned !== initialPinned;
+  const timeRangeChanged = startTime.trim() !== initialStartTime || endTime.trim() !== initialEndTime;
   const nameChanged = name.trim() !== initialName;
   const categoryChanged = selectedCategory !== initialCategory;
   const daysChanged = JSON.stringify([...daysOfWeek].sort()) !== JSON.stringify([...initialDays].sort());
-  const hasChanges = nameChanged || categoryChanged || daysChanged;
+  const hasChanges = nameChanged || categoryChanged || daysChanged || timeRangeChanged || pinChanged;
 
   const handleSave = async () => {
     if (!name.trim() || !selectedCategory || daysOfWeek.length === 0) {
@@ -89,12 +106,38 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
       return;
     }
 
+    const start = startTime.trim() || null;
+    const end = endTime.trim() || null;
+    if (start) {
+      const err = validateTimeString(start);
+      if (err) {
+        snackbarHelper.error(t(err));
+        return;
+      }
+    }
+    if (end) {
+      const err = validateTimeString(end);
+      if (err) {
+        snackbarHelper.error(t(err));
+        return;
+      }
+    }
+    if (start && end && timeToMinutes(start, end) === null) {
+      snackbarHelper.error(t('screens.home.timeValidationEndAfterStart'));
+      return;
+    }
+
     setIsSaving(true);
     try {
+      const durationMinutes = start && end ? timeToMinutes(start, end) : null;
       const { error } = await updateHabit(habitId, {
         name: name.trim(),
         category_id: selectedCategory,
         days_of_week: daysOfWeek,
+        start_time: start,
+        end_time: end,
+        duration_minutes: durationMinutes,
+        is_pinned: isPinned,
       });
 
       if (error) {
@@ -117,7 +160,7 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
     const confirmDelete = async () => {
       const { error } = await deleteHabit(habitId);
       if (error) {
-        snackbarHelper.error(t('screens.home.deleteError') || error.message);
+        snackbarHelper.error(error.message || t('screens.home.deleteError'));
         return;
       }
       snackbarHelper.success(t('screens.home.habitDeleted') || 'Habit deleted successfully');
@@ -127,9 +170,10 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
 
     snackbarService.show({
       message: t('screens.home.deleteHabitConfirm') || 'Are you sure you want to delete this habit?',
-      type: 'warning',
-      duration: SNACKBAR_CONFIRM_DURATION,
+      type: 'info',
       position: 'center',
+      persistent: true,
+      customColor: RITUAL_COLORS.accent.primary,
       action: {
         label: t('screens.home.deleteHabit') || 'DELETE',
         onPress: confirmDelete,
@@ -140,6 +184,8 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
   const handleClose = () => {
     setName('');
     setSelectedCategory('');
+    setStartTime('');
+    setEndTime('');
     setDaysOfWeek([]);
     setShowCategoryDropdown(false);
     onClose();
@@ -187,13 +233,13 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-              <Ionicons name={ICONS.close} size={MODAL_ICON_SIZES.header} color={RITUAL_COLORS.text.primary} />
+              <Ionicons name={ICONS.close} size={24} color={RITUAL_COLORS.text.primary} />
             </TouchableOpacity>
             <Text style={styles.title}>
               {habit?.name || t('screens.home.editHabit.title')}
             </Text>
             <TouchableOpacity onPress={handleDelete} style={styles.deleteButton}>
-              <Ionicons name={ICONS.trashOutline} size={MODAL_ICON_SIZES.header} color={RITUAL_COLORS.status.error} />
+              <Ionicons name={ICONS.trashOutline} size={24} color={RITUAL_COLORS.status.error} />
             </TouchableOpacity>
           </View>
 
@@ -235,11 +281,13 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
                 >
                   {selectedCategoryData
                     ? translateCategoryName(selectedCategoryData.name)
-                    : t('screens.home.selectCategory')}
+                    : habit?.category && selectedCategory === habit.category_id
+                      ? translateCategoryName(habit.category.name)
+                      : t('screens.home.selectCategory')}
                 </Text>
                 <Ionicons
                   name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'}
-                  size={MODAL_ICON_SIZES.default}
+                  size={20}
                   color={RITUAL_COLORS.text.tertiary}
                 />
               </TouchableOpacity>
@@ -264,8 +312,8 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
                         }}
                       >
                         <Ionicons
-                          name={category.icon as any}
-                          size={MODAL_ICON_SIZES.default}
+                          name={getCategoryIconName(category.icon) as any}
+                          size={20}
                           color={category.color}
                         />
                         <Text style={styles.dropdownItemText}>
@@ -276,6 +324,47 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
                   )}
                 </View>
               )}
+            </View>
+
+            {/* Time range */}
+            <View style={styles.inputSection}>
+              <Text style={styles.label}>
+                {t('screens.home.timeRange')}
+              </Text>
+              <View style={styles.timeRow}>
+              <TextInput
+                style={[styles.input, styles.timeInput]}
+                placeholder={t('screens.home.timeRangeStartPlaceholder')}
+                placeholderTextColor={RITUAL_COLORS.text.tertiary}
+                value={startTime}
+                onChangeText={(text) => setStartTime(formatTimeInput(text))}
+                keyboardType="number-pad"
+                maxLength={5}
+              />
+              <Text style={styles.timeSeparator}>–</Text>
+              <TextInput
+                style={[styles.input, styles.timeInput]}
+                placeholder={t('screens.home.timeRangeEndPlaceholder')}
+                placeholderTextColor={RITUAL_COLORS.text.tertiary}
+                value={endTime}
+                onChangeText={(text) => setEndTime(formatTimeInput(text))}
+                keyboardType="number-pad"
+                maxLength={5}
+              />
+              </View>
+            </View>
+
+            {/* Pin (creator only: list is own habits) */}
+            <View style={styles.inputSection}>
+              <View style={styles.pinRow}>
+                <Text style={styles.label}>{t('screens.home.editHabit.pinLabel')}</Text>
+                <Switch
+                  value={isPinned}
+                  onValueChange={setIsPinned}
+                  trackColor={{ false: RITUAL_COLORS.text.tertiary, true: RITUAL_COLORS.accent.primary }}
+                  thumbColor={RITUAL_COLORS.text.primary}
+                />
+              </View>
             </View>
 
             {/* Repeat On Section */}
@@ -317,22 +406,19 @@ export const EditHabitModal: React.FC<EditHabitModalProps> = ({
             </View>
           </ScrollView>
 
-          {/* Action Buttons */}
+          {/* Action Buttons – Save only active when there are changes */}
           <View style={styles.actions}>
             <TouchableOpacity
               style={[
                 styles.saveButton,
-                {
-                  opacity:
-                    name.trim() && selectedCategory && daysOfWeek.length > 0 && hasChanges && !isSaving
-                      ? 1
-                      : 0.4,
-                },
+                !hasChanges && styles.saveButtonDisabled,
+                hasChanges && !isSaving && styles.saveButtonActive,
               ]}
               onPress={handleSave}
               disabled={!name.trim() || !selectedCategory || daysOfWeek.length === 0 || !hasChanges || isSaving}
+              activeOpacity={hasChanges ? 0.8 : 1}
             >
-              <Ionicons name={ICONS.save} size={MODAL_ICON_SIZES.default} color={RITUAL_COLORS.text.primary} />
+              <Ionicons name={ICONS.save} size={20} color={RITUAL_COLORS.text.primary} />
               <Text style={styles.saveButtonText}>
                 {isSaving ? t('screens.home.editHabit.saving') : t('screens.home.saveHabit')}
               </Text>

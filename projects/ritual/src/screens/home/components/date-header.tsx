@@ -8,7 +8,6 @@ import { ICONS, IMAGES } from '../../../assets';
 import { RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
 
-import { DATE_HEADER_ICON_SIZES } from '../constants';
 import type { DateHeaderProps } from '../models/home-models';
 import { useHomeStore } from '../store/home-store';
 import { createStyles } from '../styles/date-header.styles';
@@ -36,7 +35,7 @@ export const DateHeader: React.FC<DateHeaderProps> = ({
           </View>
         )}
         <View style={styles.dateContainer}>
-          <Ionicons name={ICONS.calendar} size={DATE_HEADER_ICON_SIZES.calendar} color={RITUAL_COLORS.text.primary} />
+          <Ionicons name={ICONS.calendar} size={20} color={RITUAL_COLORS.text.primary} />
           <Text style={styles.dateText}>{dateText}</Text>
         </View>
       </View>
@@ -47,7 +46,7 @@ export const DateHeader: React.FC<DateHeaderProps> = ({
           accessibilityLabel="Settings"
           accessibilityRole="button"
         >
-          <Ionicons name={ICONS.settings} size={DATE_HEADER_ICON_SIZES.calendar} color={RITUAL_COLORS.text.primary} />
+          <Ionicons name={ICONS.settings} size={20} color={RITUAL_COLORS.text.primary} />
         </TouchableOpacity>
       ) : (
         <View style={styles.iconButton} />
