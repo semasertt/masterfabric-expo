@@ -3,34 +3,26 @@
  */
 
 import { create } from 'zustand';
-import type { HomeScreenState, Habit, DailyProgress } from '../models/home-models';
+
+import { addGardenPoints, getCurrentUser, getUserProfile } from '../../../shared/services/auth-service';
 import {
-  getUserHabits,
   createHabit as createHabitService,
-  toggleHabitCompletion,
   getHabitCompletions,
-  getHabitCategories,
+  getUserHabits,
+  toggleHabitCompletion,
 } from '../../../shared/services/habits-service';
-import { getCurrentUser } from '../../../shared/services/auth-service';
+import { t } from '../../../shared/i18n';
+import type {
+  AddHabitFormPayload,
+  DailyProgress,
+  Habit,
+  HomeScreenState,
+  HomeStoreState,
+  WeekProgressMap,
+} from '../models/home-models';
+import { canCompleteHabitNow, timeToMinutes } from '../utils';
 
-interface HomeStore extends HomeScreenState {
-  setHabits: (habits: Habit[]) => void;
-  addHabit: (name: string, categoryId: string, daysOfWeek: number[], points: number) => Promise<void>;
-  toggleHabit: (habitId: string) => Promise<void>;
-  setProgress: (progress: DailyProgress) => void;
-  setLoading: (isLoading: boolean) => void;
-  setError: (error: Error | null) => void;
-  setSelectedDate: (date: Date) => void;
-  refreshData: () => Promise<void>;
-  setPoints: (points: number) => void;
-  addPoints: (points: number) => void;
-  selectedCategoryId: string | null;
-  setSelectedCategoryId: (categoryId: string | null) => void;
-  isNavigatingToCategory: boolean;
-  setIsNavigatingToCategory: (isNavigating: boolean) => void;
-}
-
-const initialState: HomeScreenState = {
+const initialState: HomeScreenState & { weekProgress: WeekProgressMap } = {
   selectedDate: new Date(),
   habits: [],
   progress: {
@@ -42,20 +34,11 @@ const initialState: HomeScreenState = {
   },
   isLoading: false,
   error: null,
-  points: 0, // Total user points
+  points: 0,
+  weekProgress: {},
 };
 
-interface ExtendedHomeStore extends HomeStore {
-  points: number;
-  setPoints: (points: number) => void;
-  addPoints: (points: number) => void;
-  selectedCategoryId: string | null;
-  setSelectedCategoryId: (categoryId: string | null) => void;
-  isNavigatingToCategory: boolean;
-  setIsNavigatingToCategory: (isNavigating: boolean) => void;
-}
-
-export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
+export const useHomeStore = create<HomeStoreState>((set, get) => ({
   ...initialState,
   selectedCategoryId: null,
   setSelectedCategoryId: (categoryId) => set({ selectedCategoryId: categoryId }),
@@ -68,7 +51,7 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
     const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
     const pointsEarned = habits
       .filter((h) => h.is_completed)
-      .reduce((sum, h) => sum + h.points, 0);
+      .reduce((sum, h) => sum + (h?.points ?? 10), 0);
 
     set({
       habits,
@@ -82,7 +65,7 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
     });
   },
 
-  addHabit: async (name, categoryId, daysOfWeek, points) => {
+  addHabit: async (payload) => {
     const user = await getCurrentUser();
     if (!user) {
       set({ error: new Error('User not authenticated') });
@@ -92,9 +75,18 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const { habit, error } = await createHabitService(user.id, {
-        name,
-        category_id: categoryId,
-        days_of_week: daysOfWeek,
+        name: payload.name,
+        category_id: payload.categoryId,
+        days_of_week: payload.daysOfWeek,
+        habit_type: payload.habitType,
+        unit: payload.unit ?? null,
+        daily_target: payload.dailyTarget ?? null,
+        note: payload.note ?? null,
+        reminder_enabled: payload.reminderEnabled ?? false,
+        reminder_time: payload.reminderTime ?? null,
+        start_time: payload.timeRange?.start_time ?? null,
+        end_time: payload.timeRange?.end_time ?? null,
+        duration_minutes: payload.timeRange ? timeToMinutes(payload.timeRange.start_time, payload.timeRange.end_time) : null,
       });
 
       if (error || !habit) {
@@ -102,14 +94,16 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
         return;
       }
 
-      // Add points to habit (from category or default)
+      // Ensure habit has points (createHabit returns points: 10; guard against schema/Proxy)
       const habitWithPoints: Habit = {
         ...habit,
-        points,
+        points: habit?.points ?? 10,
       };
 
       const currentHabits = get().habits;
       get().setHabits([...currentHabits, habitWithPoints]);
+      // Sync from server so list matches DB and any RLS/network issues are visible
+      await get().refreshData();
     } catch (error) {
       set({ error: error instanceof Error ? error : new Error('Unknown error') });
     } finally {
@@ -142,6 +136,13 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
       return;
     }
 
+    const wasCompleted = habit.is_completed;
+    // Completing only allowed within habit's time window (start_time–end_time)
+    if (!wasCompleted && !canCompleteHabitNow(habit)) {
+      set({ error: new Error(t('screens.home.errorCompleteOnlyInTimeWindow')) });
+      return;
+    }
+
     const { error } = await toggleHabitCompletion(habitId, user.id, selectedDate);
 
     if (error) {
@@ -149,18 +150,43 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
       return;
     }
 
-    // Update points based on completion status
-    const wasCompleted = habit.is_completed;
-    if (!wasCompleted) {
-      // Adding points when completing
-      get().addPoints(habit.points);
-    } else {
-      // Removing points when uncompleting
-      get().addPoints(-habit.points);
+    const habits = get().habits;
+    const totalHabits = habits.length;
+    const completedBefore = habits.filter((h) => h.is_completed).length;
+    const pointsPerHabit = habit?.points ?? 10;
+
+    let gpDelta = wasCompleted ? -pointsPerHabit : pointsPerHabit;
+    if (!wasCompleted && completedBefore + 1 === totalHabits && totalHabits > 0) {
+      gpDelta += 15;
+    }
+    if (wasCompleted && completedBefore === totalHabits && totalHabits > 0) {
+      gpDelta -= 15;
     }
 
-    // Refresh habits to get updated completion status
-    await get().refreshData();
+    await addGardenPoints(user.id, gpDelta);
+    get().addPoints(gpDelta);
+
+    // Optimistic update: flip is_completed locally so progress/UI stay in sync.
+    // Do not call refreshData() here — it can overwrite points with stale profile.total_points.
+    const updatedHabits = habits.map((h) =>
+      h.id === habitId ? { ...h, is_completed: !wasCompleted } : h
+    );
+    get().setHabits(updatedHabits);
+
+    // Update week progress ring for selected date
+    const toLocalDateStr = (d: Date) =>
+      [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+    const dateStr = toLocalDateStr(selectedDate);
+    const wp = get().weekProgress[dateStr];
+    if (wp) {
+      const completedDelta = wasCompleted ? -1 : 1;
+      set({
+        weekProgress: {
+          ...get().weekProgress,
+          [dateStr]: { total: wp.total, completed: Math.max(0, wp.completed + completedDelta) },
+        },
+      });
+    }
   },
 
   setProgress: (progress) => set({ progress }),
@@ -183,16 +209,23 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
     set({ points: Math.max(0, currentPoints + points) });
   },
 
+  syncPointsFromProfile: async () => {
+    const user = await getCurrentUser();
+    if (!user) return;
+    const { profile } = await getUserProfile(user.id);
+    if (profile != null) set({ points: profile.total_points ?? 0 });
+  },
+
   refreshData: async () => {
     const user = await getCurrentUser();
     if (!user) {
-      // No user logged in, set empty habits
-      set({ habits: [], isLoading: false, error: null });
+      set({ habits: [], weekProgress: {}, isLoading: false, error: null });
       return;
     }
 
     set({ isLoading: true, error: null });
     try {
+      // GP = running balance (total_points): added/subtracted on completion or spend; not reset on day change.
       const selectedDate = get().selectedDate;
       
       // Get the day of week for the selected date
@@ -208,35 +241,85 @@ export const useHomeStore = create<ExtendedHomeStore>((set, get) => ({
         return;
       }
 
-      // Filter habits to only show those active on the selected day
+      // Date-only string YYYY-MM-DD in local time (avoids timezone bugs with created_at)
+      const toDateStr = (d: Date) =>
+        [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+      const selectedDateStr = toDateStr(selectedDate);
+
+      // Filter habits: 1) active on this day of week, 2) created on or before selected date (don't show in past).
       const activeHabits = habits.filter((habit) => {
         const daysOfWeek = habit.days_of_week || [];
-        return daysOfWeek.includes(supabaseDayOfWeek);
+        const matchesDay = daysOfWeek.length === 0 || daysOfWeek.includes(supabaseDayOfWeek);
+        if (!matchesDay) return false;
+        if (!habit.created_at) return true; // legacy: no created_at → show on all dates
+        const createdDate = new Date(habit.created_at);
+        const habitCreatedDateStr = toDateStr(createdDate);
+        return habitCreatedDateStr <= selectedDateStr;
       });
 
-      // Get completions for the selected date
-      const { completions, error: completionsError } = await getHabitCompletions(
-        user.id,
-        selectedDate,
-        selectedDate
-      );
+      // Week range for calendar rings (compute once, then fetch day + week completions in parallel)
+      const centerWeekStart = new Date(selectedDate);
+      centerWeekStart.setDate(selectedDate.getDate() - selectedDate.getDay());
+      centerWeekStart.setHours(0, 0, 0, 0);
+      const rangeStart = new Date(centerWeekStart);
+      rangeStart.setDate(centerWeekStart.getDate() - 7 * 12);
+      const rangeEnd = new Date(centerWeekStart);
+      rangeEnd.setDate(centerWeekStart.getDate() + 6 + 7 * 4);
+
+      const toLocalDateStr = (d: Date) =>
+        [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join('-');
+
+      // Get selected-day completions and week completions in parallel (faster load / day switch)
+      const [
+        { completions, completionValues, error: completionsError },
+        { completions: weekCompletions },
+      ] = await Promise.all([
+        getHabitCompletions(user.id, selectedDate, selectedDate),
+        getHabitCompletions(user.id, rangeStart, rangeEnd),
+      ]);
 
       if (completionsError) {
         console.warn('Failed to fetch completions:', completionsError);
       }
 
-      // Mark habits as completed based on completions
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      // Mark habits as completed and set completion_value (quantitative)
+      const dateStr = toLocalDateStr(selectedDate);
       const habitsWithCompletion: Habit[] = activeHabits.map((habit) => {
-        const isCompleted = completions[`${habit.id}_${dateStr}`] === true;
+        const key = `${habit.id}_${dateStr}`;
+        const isCompleted = completions[key] === true;
+        const value = completionValues[key];
         return {
           ...habit,
           is_completed: isCompleted,
           completed_at: isCompleted ? selectedDate : undefined,
+          completion_value: value !== undefined ? value : undefined,
         };
       });
+      const weekProgress: WeekProgressMap = {};
+      const totalDays = 7 * (12 + 1 + 4);
+      for (let i = 0; i < totalDays; i++) {
+        const dayDate = new Date(rangeStart);
+        dayDate.setDate(rangeStart.getDate() + i);
+        dayDate.setHours(0, 0, 0, 0);
+        const dayStr = toLocalDateStr(dayDate);
+        const jsDay = dayDate.getDay();
+        const supabaseDay = jsDay === 0 ? 7 : jsDay;
+        const activeForDay = habits.filter((h) => {
+          const days = h.days_of_week || [];
+          if (days.length > 0 && !days.includes(supabaseDay)) return false;
+          if (!h.created_at) return true;
+          return toDateStr(new Date(h.created_at)) <= dayStr;
+        });
+        const completedForDay = activeForDay.filter((h) => weekCompletions[`${h.id}_${dayStr}`] === true).length;
+        weekProgress[dayStr] = { total: activeForDay.length, completed: completedForDay };
+      }
 
+      set({ weekProgress });
       get().setHabits(habitsWithCompletion);
+
+      // GP = running balance: read latest from backend. Only addGardenPoints (toggle/spend) updates it; no full recalc.
+      const { profile } = await getUserProfile(user.id);
+      if (profile) set({ points: profile.total_points ?? 0 });
     } catch (error) {
       set({ error: error instanceof Error ? error : new Error('Unknown error') });
     } finally {
