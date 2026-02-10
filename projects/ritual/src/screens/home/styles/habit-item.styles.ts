@@ -1,28 +1,28 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { HABIT_ITEM_SIZES } from '../constants';
 
 export const createStyles = () => {
   return StyleSheet.create({
     container: {
-      marginHorizontal: HABIT_ITEM_SIZES.containerMarginH,
-      marginBottom: HABIT_ITEM_SIZES.containerMarginBottom,
+      marginHorizontal: 24,
+      marginBottom: 12,
       padding: 0,
     },
     contentWrapper: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingVertical: HABIT_ITEM_SIZES.contentWrapperPaddingV,
-      paddingHorizontal: HABIT_ITEM_SIZES.contentWrapperPaddingH,
+      paddingVertical: 18,
+      paddingHorizontal: 20,
     },
     checkbox: {
-      width: HABIT_ITEM_SIZES.checkboxSize,
-      height: HABIT_ITEM_SIZES.checkboxSize,
-      borderRadius: HABIT_ITEM_SIZES.checkboxBorderRadius,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
       borderWidth: 0,
       alignItems: 'center',
       justifyContent: 'center',
-      marginRight: HABIT_ITEM_SIZES.checkboxMarginRight,
+      marginRight: 16,
     },
     checkboxChecked: {
       backgroundColor: RITUAL_COLORS.accent.primary,
@@ -40,9 +40,9 @@ export const createStyles = () => {
       flex: 1,
     },
     habitName: {
-      fontSize: HABIT_ITEM_SIZES.habitNameFontSize,
+      fontSize: 16,
       fontWeight: '600',
-      marginBottom: HABIT_ITEM_SIZES.habitNameMarginBottom,
+      marginBottom: 4,
       color: RITUAL_COLORS.text.primary,
     },
     habitNameCompleted: {
@@ -53,37 +53,50 @@ export const createStyles = () => {
     categoryRow: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: HABIT_ITEM_SIZES.categoryRowGap,
+      gap: 8,
     },
     categoryBadge: {
       flexDirection: 'row',
       alignItems: 'center',
-      paddingHorizontal: HABIT_ITEM_SIZES.categoryBadgePaddingH,
-      paddingVertical: HABIT_ITEM_SIZES.categoryBadgePaddingV,
-      borderRadius: HABIT_ITEM_SIZES.categoryBadgeBorderRadius,
-      fontSize: HABIT_ITEM_SIZES.categoryBadgeFontSize,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 6,
+      fontSize: 11,
       fontWeight: '700',
       letterSpacing: 0.5,
-      gap: HABIT_ITEM_SIZES.categoryBadgeGap,
+      gap: 4,
     },
     categoryIcon: {
       marginRight: 2,
     },
-    pointsText: {
-      fontSize: HABIT_ITEM_SIZES.pointsFontSize,
+    timeRangeText: {
+      fontSize: 12,
       fontWeight: '500',
       color: RITUAL_COLORS.text.secondary,
-      marginLeft: HABIT_ITEM_SIZES.pointsMarginLeft,
+    },
+    pointsText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: RITUAL_COLORS.text.secondary,
+      marginLeft: 8,
+    },
+    menuRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
+    },
+    pinIconWrap: {
+      padding: 4,
     },
     menuButton: {
-      width: HABIT_ITEM_SIZES.menuButtonSize,
-      height: HABIT_ITEM_SIZES.menuButtonSize,
+      width: 32,
+      height: 32,
       alignItems: 'center',
       justifyContent: 'center',
     },
     categoryBadgeText: {
       color: RITUAL_COLORS.text.primary,
-      fontSize: HABIT_ITEM_SIZES.categoryBadgeFontSize,
+      fontSize: 11,
       fontWeight: '700',
     },
   });

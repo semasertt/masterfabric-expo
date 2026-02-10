@@ -1,33 +1,40 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { HABIT_LIST_SIZES } from '../constants';
 
 export const createStyles = () => {
   return StyleSheet.create({
     container: {
-      marginTop: HABIT_LIST_SIZES.marginTop,
+      marginTop: 8,
       backgroundColor: RITUAL_COLORS.background.primary,
     },
     sectionTitle: {
-      fontSize: HABIT_LIST_SIZES.sectionTitleFontSize,
+      fontSize: 14,
       fontWeight: '700',
       letterSpacing: 1,
-      paddingHorizontal: HABIT_LIST_SIZES.sectionTitlePaddingH,
-      paddingVertical: HABIT_LIST_SIZES.sectionTitlePaddingV,
-      opacity: 0.7,
+      paddingHorizontal: 24,
+      paddingVertical: 16,
+      opacity: 0.9,
       color: RITUAL_COLORS.text.primary,
       textTransform: 'uppercase',
     },
+    subtitle: {
+      fontSize: 13,
+      color: RITUAL_COLORS.text.secondary,
+      paddingHorizontal: 24,
+      marginTop: -4,
+      marginBottom: 8,
+    },
     emptyContainer: {
-      padding: HABIT_LIST_SIZES.emptyContainerPadding,
+      padding: 48,
       alignItems: 'center',
       justifyContent: 'center',
     },
     emptyText: {
-      fontSize: HABIT_LIST_SIZES.emptyTextFontSize,
+      fontSize: 16,
       opacity: 0.6,
       textAlign: 'center',
-      marginTop: HABIT_LIST_SIZES.emptyTextMarginTop,
+      marginTop: 16,
       color: RITUAL_COLORS.text.secondary,
     },
   });

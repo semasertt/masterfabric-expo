@@ -1,7 +1,7 @@
 import { Sizing } from 'masterfabric-expo-core';
 import { Platform, StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { FAB_SIZES, SCROLL_PADDING_BOTTOM, SCROLL_PADDING_TOP, SHADOW_COLOR } from '../constants';
 
 export const createStyles = () => {
   return StyleSheet.create({
@@ -11,25 +11,22 @@ export const createStyles = () => {
       position: 'relative',
     },
     scrollContent: {
-      paddingTop: SCROLL_PADDING_TOP,
-      paddingBottom: SCROLL_PADDING_BOTTOM,
+      paddingTop: 24,
+      paddingBottom: 100,
     },
     fab: {
       position: 'absolute',
-      right: FAB_SIZES.right,
-      bottom: Platform.OS === 'ios' ? FAB_SIZES.bottomIos : FAB_SIZES.bottomAndroid, 
-      width: FAB_SIZES.width,
-      height: FAB_SIZES.height,
-      borderRadius: FAB_SIZES.borderRadius,
+      right: 10,
+      bottom: Platform.OS === 'ios' ? 100 : 20,
+      width: 56,
+      height: 56,
+      borderRadius: 28,
       backgroundColor: RITUAL_COLORS.accent.primary,
       alignItems: 'center',
       justifyContent: 'center',
       elevation: Sizing.elevation.m,
-      shadowColor: SHADOW_COLOR,
-      shadowOffset: {
-        width: 0,
-        height: Sizing.elevation.s,
-      },
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: Sizing.elevation.s },
       shadowOpacity: Sizing.shadowOpacity.m,
       shadowRadius: Sizing.elevation.s,
     },

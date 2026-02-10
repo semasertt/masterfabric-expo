@@ -1,19 +1,19 @@
 import { StyleSheet } from 'react-native';
+
 import { RITUAL_COLORS } from '../../../shared/constants';
-import { DEBUG_SIZES } from '../constants';
 
 export const createStyles = () => {
   return StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: RITUAL_COLORS.background.primary,
-      padding: DEBUG_SIZES.containerPadding,
+      padding: 20,
     },
     title: {
-      fontSize: DEBUG_SIZES.titleFontSize,
+      fontSize: 24,
       fontWeight: 'bold',
       color: RITUAL_COLORS.text.primary,
-      marginBottom: DEBUG_SIZES.titleMarginBottom,
+      marginBottom: 20,
       textAlign: 'center',
     },
     scrollView: {
@@ -21,32 +21,32 @@ export const createStyles = () => {
     },
     section: {
       backgroundColor: RITUAL_COLORS.background.secondary,
-      padding: DEBUG_SIZES.sectionPadding,
-      borderRadius: DEBUG_SIZES.sectionBorderRadius,
-      marginBottom: DEBUG_SIZES.sectionMarginBottom,
+      padding: 16,
+      borderRadius: 12,
+      marginBottom: 16,
     },
     sectionTitle: {
-      fontSize: DEBUG_SIZES.sectionTitleFontSize,
+      fontSize: 18,
       fontWeight: '600',
       color: RITUAL_COLORS.text.primary,
-      marginBottom: DEBUG_SIZES.sectionTitleMarginBottom,
+      marginBottom: 12,
     },
     statusText: {
-      fontSize: DEBUG_SIZES.statusTextFontSize,
+      fontSize: 14,
       color: RITUAL_COLORS.text.secondary,
-      marginBottom: DEBUG_SIZES.statusTextMarginBottom,
-      lineHeight: DEBUG_SIZES.statusTextLineHeight,
+      marginBottom: 12,
+      lineHeight: 20,
     },
     button: {
       backgroundColor: RITUAL_COLORS.accent.primary,
-      paddingVertical: DEBUG_SIZES.buttonPaddingV,
-      paddingHorizontal: DEBUG_SIZES.buttonPaddingH,
-      borderRadius: DEBUG_SIZES.buttonBorderRadius,
+      paddingVertical: 12,
+      paddingHorizontal: 20,
+      borderRadius: 8,
       alignItems: 'center',
     },
     buttonText: {
       color: RITUAL_COLORS.text.primary,
-      fontSize: DEBUG_SIZES.buttonTextFontSize,
+      fontSize: 16,
       fontWeight: '600',
     },
   });
