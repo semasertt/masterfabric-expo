@@ -1,11 +1,8 @@
 import React from 'react';
 import { View } from 'react-native';
-import { createStyles } from '../styles/step-indicator.styles';
 
-export interface StepIndicatorProps {
-  currentStep: number;
-  totalSteps: number;
-}
+import type { StepIndicatorProps } from '../models/onboarding-models';
+import { createStyles } from '../styles/step-indicator.styles';
 
 export const StepIndicator: React.FC<StepIndicatorProps> = ({
   currentStep,

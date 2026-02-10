@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
+
 import { navigationConfig } from '../../../navigation';
 import { t } from '../../../shared/i18n';
 import { useOnboardingStore } from '../store/onboarding-store';
-import { TOTAL_STEPS } from '../constants';
-import { getOnboardingSteps } from '../utils';
 import { createStyles } from '../styles/onboarding-screen.styles';
+import { getOnboardingSteps, TOTAL_STEPS } from '../utils';
 import { StepContent } from './step-content';
 import { StepControls } from './step-controls';
 import { StepIndicator } from './step-indicator';
@@ -45,7 +45,6 @@ export const OnboardingScreen: React.FC = () => {
       {/* Header with Skip Button */}
       <View style={styles.header}>
         <View style={styles.backButton} />
-        <View style={styles.backButton} />
         <TouchableOpacity style={styles.skipButton} onPress={handleSkip}>
           <Text style={styles.skipText}>{t('screens.onboarding.skip')}</Text>
         </TouchableOpacity>
@@ -56,7 +55,7 @@ export const OnboardingScreen: React.FC = () => {
         {currentStepData && <StepContent step={currentStepData} />}
       </View>
 
-      {/* Progress Indicator – Next ile içerik (Build) arasında */}
+      {/* Progress Indicator – between Next and content (Build) */}
       <StepIndicator currentStep={currentStep} totalSteps={TOTAL_STEPS} />
 
       {/* Controls */}

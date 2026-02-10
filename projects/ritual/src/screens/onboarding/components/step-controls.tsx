@@ -1,22 +1,15 @@
 import React from 'react';
-import { View, TouchableOpacity, Text } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
+
 import { t } from '../../../shared/i18n';
-import { FIRST_STEP_INDEX, ONBOARDING_I18N_PREFIX } from '../constants';
+import type { StepControlsProps } from '../models/onboarding-models';
 import { createStyles } from '../styles/step-controls.styles';
 
-export interface StepControlsProps {
-  currentStep: number;
-  totalSteps: number;
-  onNext: () => void;
-  onPrevious: () => void;
-  onSkip: () => void;
-  onStart: () => void;
-}
-
+const I18N_PREFIX = 'screens.onboarding' as const;
 const I18N_KEYS = {
-  previous: `${ONBOARDING_I18N_PREFIX}.previous`,
-  next: `${ONBOARDING_I18N_PREFIX}.next`,
-  start: `${ONBOARDING_I18N_PREFIX}.start`,
+  previous: `${I18N_PREFIX}.previous`,
+  next: `${I18N_PREFIX}.next`,
+  start: `${I18N_PREFIX}.start`,
 } as const;
 
 export const StepControls: React.FC<StepControlsProps> = ({
@@ -29,7 +22,7 @@ export const StepControls: React.FC<StepControlsProps> = ({
 }) => {
   const styles = createStyles();
   const isLastStep = currentStep === totalSteps - 1;
-  const isFirstStep = currentStep === FIRST_STEP_INDEX;
+  const isFirstStep = currentStep === 0;
 
   return (
     <View style={[styles.container, isFirstStep && styles.containerFirstStep]}>

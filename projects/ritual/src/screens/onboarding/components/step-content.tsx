@@ -1,32 +1,26 @@
 import React from 'react';
-import { View, Text, Image } from 'react-native';
+import { Image, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+
 import { IMAGES } from '../../../assets';
 import { RITUAL_COLORS } from '../../../shared/constants';
 import { t } from '../../../shared/i18n';
-import {
-  FIRST_STEP_INDEX,
-  ONBOARDING_ICON_SHADOW,
-  ONBOARDING_ICON_SIZE,
-  ONBOARDING_I18N_PREFIX,
-} from '../constants';
-import type { OnboardingStep } from '../models/onboarding-models';
-import { isIoniconName } from '../utils';
+import type { StepContentProps } from '../models/onboarding-models';
 import { createStyles } from '../styles/step-content.styles';
-
-interface StepContentProps {
-  step: OnboardingStep;
-}
+import { isIoniconName } from '../utils';
 
 export const StepContent: React.FC<StepContentProps> = ({ step }) => {
   const styles = createStyles();
-  const isFirstStep = step.id === FIRST_STEP_INDEX;
+  const isFirstStep = step.id === 0;
   const accentColor = RITUAL_COLORS.accent.primary;
 
   const getIconStyle = () => ({
     backgroundColor: accentColor,
     shadowColor: accentColor,
-    ...ONBOARDING_ICON_SHADOW,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 12,
   });
 
   return (
@@ -41,10 +35,10 @@ export const StepContent: React.FC<StepContentProps> = ({ step }) => {
                 resizeMode="contain"
               />
               <Text style={styles.appName}>
-                {t(`${ONBOARDING_I18N_PREFIX}.step1.title`)}
+                {t('screens.onboarding.step1.title')}
               </Text>
               <Text style={styles.tagline}>
-                {t(`${ONBOARDING_I18N_PREFIX}.step1.description`)}
+                {t('screens.onboarding.step1.description')}
               </Text>
             </View>
           ) : (
@@ -54,7 +48,7 @@ export const StepContent: React.FC<StepContentProps> = ({ step }) => {
                   {isIoniconName(step.icon) ? (
                     <Ionicons
                       name={step.icon}
-                      size={ONBOARDING_ICON_SIZE}
+                      size={80}
                       color={RITUAL_COLORS.text.primary}
                     />
                   ) : (
