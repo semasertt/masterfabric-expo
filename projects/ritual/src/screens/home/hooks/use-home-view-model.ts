@@ -1,6 +1,5 @@
 /**
  * Home View Model Hook
- * Business logic for home screen
  */
 
 import { useHomeStore } from '../store/home-store';

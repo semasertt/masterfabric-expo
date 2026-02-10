@@ -4,8 +4,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { getHabitCategories, type HabitCategory } from '../../../shared/services/habits-service';
-import { CATEGORY_FILTER_TERMS } from '../constants';
+
 import { filterHabitCategories } from '../utils';
+
+const CATEGORY_FILTER_TERMS = ['ruh sağlığı', 'mental health', 'örnek', 'example'] as const;
 
 interface UseAddHabitCategoriesParams {
   visible: boolean;
