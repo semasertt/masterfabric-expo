@@ -2,14 +2,13 @@
  * Onboarding Screen Store (Zustand)
  */
 
-import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { TOTAL_STEPS, ONBOARDING_COMPLETED_KEY } from '../constants';
+import { create } from 'zustand';
+
 import type { OnboardingStoreState } from '../models/onboarding-models';
+import { ONBOARDING_COMPLETED_KEY, TOTAL_STEPS } from '../utils';
 
-interface OnboardingStore extends OnboardingStoreState {}
-
-export const useOnboardingStore = create<OnboardingStore>((set, get) => ({
+export const useOnboardingStore = create<OnboardingStoreState>((set, get) => ({
   currentStep: 0,
   totalSteps: TOTAL_STEPS,
   isCompleted: false,
