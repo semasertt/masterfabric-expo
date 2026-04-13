@@ -197,3 +197,18 @@ dependencies {
         implementation jscFlavor
     }
 }
+
+
+// New Architecture: :app:configureCMake must run after libraries emit jni/CMakeLists.txt.
+// Without this, @sentry/react-native can fail with "does not contain a CMakeLists.txt file".
+afterEvaluate {
+    def sentry = rootProject.findProject(':sentry_react-native')
+    if (sentry != null) {
+        def codegen = sentry.tasks.findByName('generateCodegenArtifactsFromSchema')
+        if (codegen != null) {
+            tasks.matching { it.name.contains('configureCMake') }.configureEach { t ->
+                t.dependsOn(codegen)
+            }
+        }
+    }
+}

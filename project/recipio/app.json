@@ -8,9 +8,21 @@
     "scheme": "recipio",
     "icon": "./src/assets/app_icon.png",
     "splash": {
+      "image": "./src/assets/app_icon.png",
+      "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "plugins": ["expo-router"],
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./src/assets/app_icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
+        }
+      ]
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.masterfabric.recipio"
