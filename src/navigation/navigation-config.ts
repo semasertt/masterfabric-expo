@@ -10,20 +10,7 @@ export const navigationConfig = {
     animation: 'default' as const,
   },
 
-  // Tab bar configuration
-  tabBarOptions: {
-    activeTintColor: '#007AFF',
-    inactiveTintColor: '#8E8E93',
-    style: {
-      backgroundColor: '#FFFFFF',
-      borderTopWidth: 0.5,
-      borderTopColor: '#E5E5E5',
-    },
-    labelStyle: {
-      fontSize: 12,
-      fontWeight: '500' as const,
-    },
-  },
+  // Tab bar colors live in app/(tabs)/_layout.tsx via getThemeColors(isDark) — do not hard-code light theme here.
 
   // Animation configurations
   animations: {

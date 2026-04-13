@@ -122,19 +122,6 @@ export interface NavigationConfig {
     gestureEnabled: boolean;
     animation: 'default' | 'slide_from_right' | 'slide_from_left' | 'fade' | 'flip' | 'simple_push';
   };
-  tabBarOptions: {
-    activeTintColor: string;
-    inactiveTintColor: string;
-    style: {
-      backgroundColor: string;
-      borderTopWidth: number;
-      borderTopColor: string;
-    };
-    labelStyle: {
-      fontSize: number;
-      fontWeight: 'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900';
-    };
-  };
 }
 
 // Store Types

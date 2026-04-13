@@ -4,7 +4,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import {
   useMasterView,
-  useThemeColors
+  useTheme,
+  useThemeColors,
 } from 'masterfabric-expo-core';
 import { InAppMessageProvider } from '@/src/screens/in-app-messaging/components/in-app-message-provider';
 import { useHomeViewModel } from '../hooks/use-home-view-model';
@@ -22,6 +23,7 @@ import { WelcomeSection } from './sections/welcome-section';
 // Hook-based MasterView implementation for Home Screen
 function HomeScreenContent() {
   const colors = useThemeColors();
+  const { isDark } = useTheme();
   const { trackActivity } = useMasterView();
   
   const {
@@ -77,12 +79,12 @@ function HomeScreenContent() {
             supabaseActions={supabaseActions}
             supabaseUser={supabaseUser}
             supabaseConnected={supabaseConnected}
-            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, colors.text === '#FFFFFF')}
+            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, isDark)}
           />
           
           <QuickActionsSection 
             quickActions={quickActions}
-            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, colors.text === '#FFFFFF')}
+            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, isDark)}
             getIconName={getActionIconName}
           />
 
@@ -95,7 +97,7 @@ function HomeScreenContent() {
           />
 
           <DeveloperSection 
-            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, colors.text === '#FFFFFF')} 
+            onActionPress={(actionId, actionTitle) => handleQuickActionPress(actionId, actionTitle, isDark)} 
           />
         </ScrollView>
       </SafeAreaView>
